@@ -21,18 +21,24 @@ import random
 ########################
 #### Quick Settings ####
 ########################
+# Note: Position is always defined as maximum of .5, and in coordinate plane.
 debug=1 #Debug mode on (1) or off (0).
 debug_fps=1
+trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
+frame_analysis=1 #Frame-by-frame analysis, used for model-prediction.
 
 # open a white full screen window
-screen_x=900
-screen_y=900
+screen_x=700
+screen_y=700
 framerate=60
+
+# background color
+background_color=[0,0,0]
 
 time_per_frame=1/framerate
 time_per_frame_precision=time_per_frame/4
 
-win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=True, color=[0,0,0], units='height')
+win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=True, color=background_color, units='height')
 
 # uncomment if you use a clock. Optional because we didn't cover timing this week, 
 # but you can find examples in the tutorial code 
@@ -63,7 +69,7 @@ win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=Tr
 numblocks=1
 numtrialsperblock=2
 #mouse tracking
-mouse = event.Mouse(visible=False,win=win)
+mouse=event.Mouse(visible=False,win=win)
 #object parameters
 c1_rad=.02
 #physical limits
@@ -94,7 +100,7 @@ for block in range(numblocks):
         #loop stuff
         frame_all=0
         frame_track=0
-        #start object physics
+        # start object physics
         c1_xpos=(random.randint(0,1000)/1000)*(poslmt-startpos_buf)
         c1_ypos=(random.randint(0,1000)/1000)*(poslmt-startpos_buf)
         c1_xacc=0*acc_multiplier
@@ -102,22 +108,22 @@ for block in range(numblocks):
         #trail drawing
         trail=[0]
         current_fps=[0]
-        #durations/timing/randomized times
+        # durations/timing/randomized times
         current_cue_dur=random.randint(1000,2500)/1000
         current_track_dur=random.randint(5000,10000)/1000
         current_ri_dur=1
-        #vwm reset conditions
+        # vwm reset conditions
         
-        #mouse tracking per trial
+        # mouse tracking per trial
         mouse.clickReset()
-        stim_pos=[[0,0]]
-        mouse_pos=[[0,0]]
+        stim_pos=[[0.0,0.0]]
+        mouse_pos=[[0.0,0.0]]
         #accuracy tracking
-        current_acc_x=[0]
-        current_acc_y=[0]
-        #INTER TRIAL INTERVAL (IVI)
+        current_acc_x=[0.0]
+        current_acc_y=[0.0]
+        # INTER TRIAL INTERVAL (IVI)
         core.wait(iti_dur)
-        #clock start
+        # clock start
         trialClock=core.Clock()
         #%% Cue
         #fixation
@@ -232,35 +238,25 @@ for block in range(numblocks):
                 # then flip your window
                 win.flip()
                 # then record your responses
-        #%% Save data!
+        #%% By-trial Analysis
         # To access position data per trial:
-        # xxxx_pos_data[block][trial][timepoint]
-        if current_trial==1 and current_block==1:
-            d_block=[current_block]
-            d_trial=[current_trial]
-            d_cue_dur=[current_cue_dur]
-            d_track_dur=[current_track_dur]
-            d_time_cue_start=[time_cue_start]
-            d_time_track_start=[time_track_start]
-            d_time_track_end=[time_track_end]
-            d_frame_track_end=[frame_track_end]
-            d_stim_pos=[stim_pos]
-            d_mouse_pos=[mouse_pos]
-            d_acc_x=[current_acc_x]
-            d_acc_y=[current_acc_y]
-        else:
-            d_block.append(current_block)
-            d_trial.append(current_trial)
-            d_cue_dur.append(current_cue_dur)
-            d_track_dur.append(current_track_dur)
-            d_time_cue_start.append(time_cue_start)
-            d_time_track_start.append(time_track_start)
-            d_time_track_end.append(time_track_end)
-            d_frame_track_end.append(frame_track_end)
-            d_stim_pos.append(stim_pos)
-            d_mouse_pos.append(mouse_pos)
-            d_acc_x.append(current_acc_x)
-            d_acc_y.append(current_acc_y)
+        # d_xxx_pos[block][trial][timepoint]
+        trial_analysisClock=core.Clock()
+        if trial_analysis==1:
+            # Collapse data to 1-dimensional (i.e., radius from target).
+            for current_acc in range(len(current_acc_x)):
+                if current_acc==0:
+                    acc_rad=[np.sqrt(current_acc_x[current_acc]**2+current_acc_y[current_acc]**2)]
+                else:
+                    acc_rad.append(np.sqrt(current_acc_x[current_acc]**2+current_acc_y[current_acc]**2))
+            # Plot a 2d 'heatmap' of accuracy.
+            for current_pix in range(len(acc_rad)):
+                if current_pix==0:
+                    heatmap=[psychopy.visual.Circle(win=win,pos=(current_acc_x[current_pix],current_acc_y[current_pix]),color=[200,200,200],radius=1,edges=4)]
+                else:
+                    heatmap.append(psychopy.visual.Circle(win=win,pos=(current_acc_x[current_pix],current_acc_y[current_pix]),color=[200,200,200],radius=1,edges=4))
+        # Time to do anaylsis, taken out of RI.
+        current_analysis_dur=trial_analysisClock.getTime()
         #%% RI
         #fixation=psychopy.visual.Circle(win=win,pos=(0,0),color='white',radius=.01,edges=12)
         # then draw all stimuli
@@ -274,17 +270,19 @@ for block in range(numblocks):
             text_frame.draw()
         # then flip your window
         win.flip()
-        core.wait(current_ri_dur)
+        core.wait(current_ri_dur-current_analysis_dur)
         #%% By-trial Feedback
         text_fb=psychopy.visual.TextStim(win=win,
-                name='text',text=str(round(abs(np.mean(d_acc_x[trial]))*abs(np.mean(d_acc_y[trial]),7))),pos=(.7,.2),
+                name='text',text=str(acc_rad),pos=(.7,.4),
                 color='white',height=.02)
         #draw feedback
         text_fb.draw()
+        for current_pix in range(len(heatmap)):
+            heatmap[current_pix].draw
         # then flip your window
         win.flip()
         core.wait(current_fb_dur)
-        #%% Playback
+        #%% Playback (For debugging)
         ## Performance View
         performanceClock=core.Clock()
         frame_2=-1
@@ -317,9 +315,35 @@ for block in range(numblocks):
                     text_mouse_pos.draw()
                     # then flip your window
                     win.flip()
-        #%% Analysis
-# can x accel predict mouse? y accel predict mouse?
-# can direction of mvt predict mouse? direction of accel?
+        #%% Save data!
+        # To access position data per trial:
+        # xxxx_pos_data[block][trial][timepoint]
+        if current_trial==1 and current_block==1:
+            d_block=[current_block]
+            d_trial=[current_trial]
+            d_cue_dur=[current_cue_dur]
+            d_track_dur=[current_track_dur]
+            d_time_cue_start=[time_cue_start]
+            d_time_track_start=[time_track_start]
+            d_time_track_end=[time_track_end]
+            d_frame_track_end=[frame_track_end]
+            d_stim_pos=[stim_pos]
+            d_mouse_pos=[mouse_pos]
+            d_acc_x=[current_acc_x]
+            d_acc_y=[current_acc_y]
+        else:
+            d_block.append(current_block)
+            d_trial.append(current_trial)
+            d_cue_dur.append(current_cue_dur)
+            d_track_dur.append(current_track_dur)
+            d_time_cue_start.append(time_cue_start)
+            d_time_track_start.append(time_track_start)
+            d_time_track_end.append(time_track_end)
+            d_frame_track_end.append(frame_track_end)
+            d_stim_pos.append(stim_pos)
+            d_mouse_pos.append(mouse_pos)
+            d_acc_x.append(current_acc_x)
+            d_acc_y.append(current_acc_y)
 #%% Required clean up
 # this cell will make sure that your window displays for a while and then 
 # closes properly
