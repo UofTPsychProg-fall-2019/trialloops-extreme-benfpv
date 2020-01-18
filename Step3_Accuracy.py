@@ -65,7 +65,10 @@ win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=Tr
 numblocks=1
 numtrialsperblock=2
 #mouse tracking
-mouse=event.Mouse(visible=False,win=win)
+if debug==1:
+    mouse=event.Mouse(visible=True,win=win)
+else:
+    mouse=event.Mouse(visible=False,win=win)
 #object parameters
 c1_rad=.02
 #physical limits
@@ -268,6 +271,7 @@ for block in range(numblocks):
                     heatmap.append(psychopy.visual.Circle(win=win,pos=(current_acc_x[current_pix],current_acc_y[current_pix]),color=current_pix/len(acc_rad),colorSpace='rgb',radius=.001,edges=4))
             # Fourier transform of mouse-stim accuracy throughout trial.
             fourier_freqs=[2,4,6,8,10] #frequency in seconds of one complete fourier cycle.
+            fourier_magnifier=4
             for freq in range(len(fourier_freqs)):
                 if freq==0:
                     fourier_fpf=[trial_fps*fourier_freqs[freq]] #frames per fourier_freq
@@ -277,15 +281,15 @@ for block in range(numblocks):
                     fourier_dpf.append(360/fourier_fpf[freq])
                 for acc in range(len(acc_rad)):
                     if acc==0:
-                        fourier_acc_rad_x=[np.cos(fourier_dpf[freq]*acc)*acc_rad[acc]]
-                        fourier_acc_rad_y=[np.sin(fourier_dpf[freq]*acc)*acc_rad[acc]]
+                        fourier_acc_rad_x=[np.cos(fourier_dpf[freq]*acc)*acc_rad[acc]*fourier_magnifier]
+                        fourier_acc_rad_y=[np.sin(fourier_dpf[freq]*acc)*acc_rad[acc]*fourier_magnifier]
                         if fourier_freqs[freq]==4 or fourier_freqs[freq]==8:
                             fourier_graph=[psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=(0,0,freq/len(fourier_freqs)),colorSpace='rgb',radius=.001,edges=4)]
                         else:
                             fourier_graph=[psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=freq/len(fourier_freqs),colorSpace='rgb',radius=.001,edges=4)]
                     else:
-                        fourier_acc_rad_x.append(np.cos(fourier_dpf[freq]*acc)*acc_rad[acc])
-                        fourier_acc_rad_y.append(np.sin(fourier_dpf[freq]*acc)*acc_rad[acc])
+                        fourier_acc_rad_x.append(np.cos(fourier_dpf[freq]*acc)*acc_rad[acc]*fourier_magnifier)
+                        fourier_acc_rad_y.append(np.sin(fourier_dpf[freq]*acc)*acc_rad[acc]*fourier_magnifier)
                         if fourier_freqs[freq]==4 or fourier_freqs[freq]==8:
                             fourier_graph.append(psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=(0,0,freq/len(fourier_freqs)),colorSpace='rgb',radius=.001,edges=4))
                         else:
