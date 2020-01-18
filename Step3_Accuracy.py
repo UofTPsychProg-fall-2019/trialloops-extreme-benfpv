@@ -23,7 +23,7 @@ import random
 ########################
 # Note: Position is always defined as maximum of .5, and in coordinate plane.
 debug=1 #Debug mode on (1) or off (0).
-debug_fps=1
+debug_fps=1 #shows fps data
 trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
 frame_analysis=1 #Frame-by-frame analysis, used for model-prediction.
 
@@ -33,7 +33,7 @@ screen_y=700
 framerate=60
 
 # background color
-background_color=[0,0,0]
+background_color='black'
 
 time_per_frame=1/framerate
 time_per_frame_precision=time_per_frame/4
@@ -86,7 +86,7 @@ for block in range(numblocks):
     current_block = block+1
     blocktext=psychopy.visual.TextStim(win=win,
                         name='text',text='block'+str(block),pos=(.5,.46),
-                        color='white',height=.04)
+                        color='white',height=.015)
     blocktext.draw()
     core.wait(1)
     #%% ADD A "START BLOCK" INPUT!!!
@@ -134,9 +134,9 @@ for block in range(numblocks):
             tgtcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='white',radius=c1_rad,edges=14)
             text=psychopy.visual.TextStim(win=win,
                         name='text',text='trial'+str(trial),pos=(.5,.46),
-                        color='white',height=.04)
+                        color='white',height=.015)
             # moving stims
-            mousecircle=psychopy.visual.Circle(win=win,pos=(mouse.getPos()[0],mouse.getPos()[1]),color='black',radius=c1_rad/3,edges=14)
+            mousecircle=psychopy.visual.Circle(win=win,pos=(mouse.getPos()[0],mouse.getPos()[1]),color='grey',radius=c1_rad/3,edges=14)
             # then draw all stimuli
             fixation.draw()
             tgtcircle.draw()
@@ -223,7 +223,7 @@ for block in range(numblocks):
                         color='white',height=.015)
                 # moving stims
                 tgtcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='white',radius=c1_rad,edges=14)
-                mousecircle=psychopy.visual.Circle(win=win,pos=(mouse.getPos()[0],mouse.getPos()[1]),color='black',radius=c1_rad/3,edges=14)
+                mousecircle=psychopy.visual.Circle(win=win,pos=(mouse.getPos()[0],mouse.getPos()[1]),color='grey',radius=c1_rad/3,edges=14)
                 # fps & trial details text
                 if debug_fps==1:
                     current_fps=round(frame_track/time_track,2)
@@ -280,26 +280,32 @@ for block in range(numblocks):
                         fourier_acc_rad_x=[np.cos(fourier_dpf[freq]*acc)*acc_rad[acc]]
                         fourier_acc_rad_y=[np.sin(fourier_dpf[freq]*acc)*acc_rad[acc]]
                         if fourier_freqs[freq]==4 or fourier_freqs[freq]==8:
-                            fourier_graph=[psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=(.4,.4,freq/len(fourier_freqs)),colorSpace='rgb',radius=.001,edges=4)]
+                            fourier_graph=[psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=(0,0,freq/len(fourier_freqs)),colorSpace='rgb',radius=.001,edges=4)]
                         else:
                             fourier_graph=[psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=freq/len(fourier_freqs),colorSpace='rgb',radius=.001,edges=4)]
                     else:
                         fourier_acc_rad_x.append(np.cos(fourier_dpf[freq]*acc)*acc_rad[acc])
                         fourier_acc_rad_y.append(np.sin(fourier_dpf[freq]*acc)*acc_rad[acc])
                         if fourier_freqs[freq]==4 or fourier_freqs[freq]==8:
-                            fourier_graph.append(psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=(.4,.4,freq/len(fourier_freqs)),colorSpace='rgb',radius=.001,edges=4))
+                            fourier_graph.append(psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=(0,0,freq/len(fourier_freqs)),colorSpace='rgb',radius=.001,edges=4))
                         else:
                             fourier_graph.append(psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc],fourier_acc_rad_y[acc]),color=freq/len(fourier_freqs),colorSpace='rgb',radius=.001,edges=4))
                 if freq==0:
                     fourier_graph_freq=[fourier_graph]
                     fourier_cog_x=[np.mean(fourier_acc_rad_x)]
                     fourier_cog_y=[np.mean(fourier_acc_rad_y)]
-                    fourier_cog_dot=[psychopy.visual.Circle(win=win,pos=(fourier_cog_x[freq],fourier_cog_y[freq]),color=(freq/len(fourier_freqs),.8,.4),colorSpace='rgb',radius=.002,edges=4)]
+                    if fourier_freqs[freq]==4 or fourier_freqs[freq]==8:
+                        fourier_cog_dot=[psychopy.visual.Circle(win=win,pos=(fourier_cog_x[freq],fourier_cog_y[freq]),color=(0,0,freq/len(fourier_freqs)),colorSpace='rgb',radius=.002,edges=4)]
+                    else:
+                        fourier_cog_dot=[psychopy.visual.Circle(win=win,pos=(fourier_cog_x[freq],fourier_cog_y[freq]),color=(freq/len(fourier_freqs),0,0),colorSpace='rgb',radius=.002,edges=4)]
                 else:
                     fourier_graph_freq.append(fourier_graph)
                     fourier_cog_x.append(np.mean(fourier_acc_rad_x))
                     fourier_cog_y.append(np.mean(fourier_acc_rad_y))
-                    fourier_cog_dot.append(psychopy.visual.Circle(win=win,pos=(fourier_cog_x[freq],fourier_cog_y[freq]),color=(freq/len(fourier_freqs),.8,.4),colorSpace='rgb',radius=.002,edges=4))
+                    if fourier_freqs[freq]==4 or fourier_freqs[freq]==8:
+                        fourier_cog_dot.append(psychopy.visual.Circle(win=win,pos=(fourier_cog_x[freq],fourier_cog_y[freq]),color=(0,0,freq/len(fourier_freqs)),colorSpace='rgb',radius=.002,edges=4))
+                    else:
+                        fourier_cog_dot.append(psychopy.visual.Circle(win=win,pos=(fourier_cog_x[freq],fourier_cog_y[freq]),color=(freq/len(fourier_freqs),0,0),colorSpace='rgb',radius=.002,edges=4))
         # RI - time taken to do the trial analyses.
         time_analysis_dur=trialClock.getTime()-time_analysis_start
         #%% RI
@@ -318,31 +324,45 @@ for block in range(numblocks):
         core.wait(current_ri_dur-time_analysis_dur)
         #%% By-trial Feedback
         # Heatmap
+        text_heatmap=psychopy.visual.TextStim(win=win,
+            name='text',text='trial accuracy t-collapsed heatmap',pos=(.7,.4),
+            color='white',height=.015)
         text_fb=psychopy.visual.TextStim(win=win,
-                name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(1,.8),
-                color='white',height=.02)
+                name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(.7,.35),
+                color='white',height=.015)
         #draw heatmap
         fixation.draw()
         text_fb.draw()
         for current_pix in range(len(heatmap)):
             heatmap[current_pix].draw()
+        text_heatmap.draw()
         # then flip your window
         win.flip()
-        core.wait(current_fb_dur)
+        core.wait(current_fb_dur/2)
         # Fourier transform
+        text_fourier=psychopy.visual.TextStim(win=win,
+            name='text',text='trial accuracy fourier transform',pos=(.7,.45),
+            color='white',height=.015)
+        text_fourier_desc=psychopy.visual.TextStim(win=win,
+            name='text',text='blue 4hz 8hz, red center of gravity',pos=(.7,.4),
+            color='white',height=.015)
         text_fb=psychopy.visual.TextStim(win=win,
-                name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(1,.8),
-                color='white',height=.02)
+                name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(.7,.35),
+                color='white',height=.015)
         #draw Fourier
         fixation.draw()
         text_fb.draw()
+        text_fourier.draw()
+        text_fourier_desc.draw()
         for current_freq in range(len(fourier_graph_freq)):
             for current_pix in range(len(fourier_graph)):
                 fourier_graph_freq[current_freq][current_pix].draw()
+                fourier_graph_freq[freq==4][current_pix].draw()
+                fourier_graph_freq[freq==8][current_pix].draw()
             fourier_cog_dot[current_freq].draw()
         # then flip your window
         win.flip()
-        core.wait(current_fb_dur)
+        core.wait(current_fb_dur*1.5)
         #%% Playback (For debugging)
         ## Performance View
         performanceClock=core.Clock()
@@ -356,17 +376,17 @@ for block in range(numblocks):
                         break
                     # stim pos and mouse pos
                     tgtcircle_2=psychopy.visual.Circle(win=win,pos=(stim_pos[frame_2][0],stim_pos[frame_2][1]),color='white',radius=c1_rad,edges=14)
-                    mousecircle_2=psychopy.visual.Circle(win=win,pos=(mouse_pos[frame_2][0],mouse_pos[frame_2][1]),color='black',radius=c1_rad/3,edges=3)
+                    mousecircle_2=psychopy.visual.Circle(win=win,pos=(mouse_pos[frame_2][0],mouse_pos[frame_2][1]),color='grey',radius=c1_rad/3,edges=3)
                     # fps & trial details text
                     text_frame=psychopy.visual.TextStim(win=win,
                         name='text',text='frame'+str(frame_2),pos=(.5,.38),
-                        color='white',height=.02)
+                        color='white',height=.015)
                     text_stim_pos=psychopy.visual.TextStim(win=win,
                         name='text',text='stim_pos'+str(stim_pos[frame_2]),pos=(.5,.34),
-                        color='white',height=.02)
+                        color='white',height=.015)
                     text_mouse_pos=psychopy.visual.TextStim(win=win,
                         name='text',text='stim_pos'+str(mouse_pos[frame_2]),pos=(.5,.30),
-                        color='white',height=.02)
+                        color='white',height=.015)
                     text_time=psychopy.visual.TextStim(win=win,
                         name='text',text='time'+str(time_track_dur*frame_2/frame_track_end),pos=(.5,.40),
                         color='white',height=.015)
