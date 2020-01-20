@@ -453,11 +453,16 @@ for block in range(numblocks):
             name='text',text='fourier: center of mass amplitude by frequency',pos=(.7,.45),
             color='white',height=.015)
         text_fourier_desc=psychopy.visual.TextStim(win=win,
-            name='text',text='cyan:4hz blue:cog, pink:8hz red:cog, white:other green:cog',pos=(.7,.4),
+            name='text',text='blue:4hz cog, red:8hz cog, green:other cog',pos=(.7,.4),
             color='white',height=.015)
         # draw fourier com graphs
         for current_freq in range(len(fourier_graph_freq)):
-            fourier_com_graph
+            fourier_com_rad_mean_graph[current_freq].draw()
+            fourier_com_rad_sd_pos_graph[current_freq].draw()
+            fourier_com_rad_sd_neg_graph[current_freq].draw()
+        # then flip your window
+        win.flip()
+        core.wait(current_fb_dur*1.5)
         #%% Playback (For debugging)
         ## Performance View
         performanceClock=core.Clock()
@@ -499,6 +504,7 @@ for block in range(numblocks):
         # To access position data per trial:
         # xxxx_pos_data[block][trial][timepoint]
         if current_trial==1 and current_block==1:
+            #trial data
             d_block=[current_block]
             d_trial=[current_trial]
             d_cue_dur=[current_cue_dur]
@@ -509,16 +515,21 @@ for block in range(numblocks):
             d_time_track_end=[time_track_end]
             d_time_track_dur=[time_track_dur]
             d_frame_track_end=[frame_track_end]
+            #raw positions
             d_stim_pos=[stim_pos]
             d_mouse_pos=[mouse_pos]
+            #heatmap
             d_acc_x=[current_acc_x]
             d_acc_y=[current_acc_y]
             d_acc_rad=[acc_rad]
+            #fourier
             d_fourier_acc_rad_x=[fourier_acc_rad_x]
             d_fourier_acc_rad_y=[fourier_acc_rad_y]
-            d_fourier_cog_x=[fourier_cog_x]
-            d_fourier_cog_y=[fourier_cog_y]
+            d_fourier_com_x=[fourier_com_x]
+            d_fourier_com_y=[fourier_com_y]
+            d_fourier_com_rad=[fourier_com_rad]
         else:
+            #trial data
             d_block.append(current_block)
             d_trial.append(current_trial)
             d_cue_dur.append(current_cue_dur)
@@ -529,15 +540,19 @@ for block in range(numblocks):
             d_time_track_end.append(time_track_end)
             d_time_track_dur.append(time_track_dur)
             d_frame_track_end.append(frame_track_end)
+            #raw positions
             d_stim_pos.append(stim_pos)
             d_mouse_pos.append(mouse_pos)
+            #heatmap
             d_acc_x.append(current_acc_x)
             d_acc_y.append(current_acc_y)
             d_acc_rad.append(acc_rad)
+            #fourier
             d_fourier_acc_rad_x.append(fourier_acc_rad_x)
             d_fourier_acc_rad_y.append(fourier_acc_rad_y)
-            d_fourier_cog_x.append(fourier_cog_x)
-            d_fourier_cog_y.append(fourier_cog_y)
+            d_fourier_com_x.append(fourier_com_x)
+            d_fourier_com_y.append(fourier_com_y)
+            d_fourier_com_rad.append(fourier_com_rad)
 #%% Required clean up
 # this cell will make sure that your window displays for a while and then 
 # closes properly
