@@ -109,7 +109,6 @@ iti_dur=.25
 fixation=psychopy.visual.Circle(win=win,pos=(0,0),color='white',radius=.002,edges=12)
 #%% Block Start
 for block in range(numblocks):
-    current_block = block+1
     blocktext=psychopy.visual.TextStim(win=win,
                         name='text',text='block'+str(block),pos=(.5,.46),
                         color='white',height=.015)
@@ -118,8 +117,6 @@ for block in range(numblocks):
     #%% ADD A "START BLOCK" INPUT!!!
     #%% Trial Start
     for trial in range(numtrialsperblock):
-        # current_trial
-        current_trial=trial+1
         #loop stuff
         frame_all=0
         frame_track=0
@@ -503,10 +500,10 @@ for block in range(numblocks):
         #%% Save data!
         # To access position data per trial:
         # xxxx_pos_data[block][trial][timepoint]
-        if current_trial==1 and current_block==1:
+        if trial==0 and block==0:
             #trial data
-            d_block=[current_block]
-            d_trial=[current_trial]
+            d_block=[block]
+            d_trial=[trial]
             d_cue_dur=[current_cue_dur]
             d_track_dur=[current_track_dur]
             d_time_cue_start=[time_cue_start]
@@ -536,8 +533,8 @@ for block in range(numblocks):
             d_fourier_com_rad_sd=[fourier_com_rad_sd]
         else:
             #trial data
-            d_block.append(current_block)
-            d_trial.append(current_trial)
+            d_block.append(block)
+            d_trial.append(trial)
             d_cue_dur.append(current_cue_dur)
             d_track_dur.append(current_track_dur)
             d_time_cue_start.append(time_cue_start)
@@ -567,8 +564,20 @@ for block in range(numblocks):
             d_fourier_com_rad_sd.append(fourier_com_rad_sd)
         #%% By-Trial Prediction! Predict accuracy and fouriers.
         if trial_prediction==1:
-            for p_trial in range(len(d_trial)):
-                p_acc_rad=np.mean(d_acc_rad_mean[p_trial])
+            if trial==0:
+                p_acc_rad_mean=d_acc_rad_mean[trial]
+                p_acc_rad_sd=d_acc_rad_sd[trial]
+                p_fourier_com_rad_mean=np.zeros(len(fourier_com_rad_mean))
+                p_fourier_com_rad_sd=np.zeros(len(fourier_com_rad_sd))
+                for current_freq in range(len(d_fourier_com_rad_mean)):
+                    p_fourier_com_rad_mean[freq]=d_fourier_com_rad_mean[trial]
+                    p_fourier_com_rad_sd[freq]=d_fourier_com_rad_sd[trial]
+            else:
+                p_acc_rad_mean=sum(d_acc_rad_mean)/(trial+1)
+                p_acc_rad_sd=sum(d_acc_rad_sd)/(trial+1)
+                for current_freq in range(len(d_fourier_com_rad_mean)):
+                    p_fourier_com_rad_mean[freq]=sum(d_fourier_com_rad_mean[freq])/(trial+1)
+                    p_fourier_com_rad_sd[freq]=sum(d_fourier_com_rad_sd[freq])/(trial+1)
 #%% Required clean up
 # this cell will make sure that your window displays for a while and then 
 # closes properly
