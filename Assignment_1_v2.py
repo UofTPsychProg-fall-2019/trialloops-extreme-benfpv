@@ -310,6 +310,7 @@ for block in range(numblocks):
                 else:
                     fourier_fpf.append(trial_fps*fourier_freqs[freq])
                     fourier_dpf.append(360/fourier_fpf[freq])
+                # convert acc_rad into point along fourier circle.
                 for acc in range(len(acc_rad)):
                     if acc==0:
                         fourier_acc_rad_x=[np.cos(fourier_dpf[freq]*acc)*acc_rad[acc]]
@@ -330,18 +331,19 @@ for block in range(numblocks):
                         else:
                             fourier_graph.append(psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc]*fourier_magnifier,fourier_acc_rad_y[acc]*fourier_magnifier),color=freq/len(fourier_freqs),colorSpace='rgb',radius=.001,edges=4))
                 if freq==0:
+                    #get fourier center of mass (com)
                     fourier_graph_freq=[fourier_graph]
                     fourier_com_x=[np.mean(fourier_acc_rad_x)]
                     fourier_com_y=[np.mean(fourier_acc_rad_y)]
                     fourier_com_rad=[np.sqrt(fourier_com_x[freq]**2+fourier_com_y[freq]**2)]
                     #fourier com descriptive statistics
-                    fourier_com_rad_mean=[np.mean(fourier_com_rad)]
-                    fourier_com_rad_min=[min(fourier_com_rad)]
-                    fourier_com_rad_max=[max(fourier_com_rad)]
-                    fourier_com_rad_error=[fourier_com_rad_mean-fourier_com_rad]
-                    fourier_com_rad_sqerror=[fourier_com_rad_error**2]
-                    fourier_com_rad_ss=[sum(fourier_com_rad_sqerror)]
-                    fourier_com_rad_sd=[fourier_com_rad_ss/len(fourier_com_rad)-1]
+                    fourier_com_rad_mean=[np.mean(fourier_com_rad[freq])]
+                    fourier_com_rad_min=[min(fourier_com_rad[freq])]
+                    fourier_com_rad_max=[max(fourier_com_rad[freq])]
+                    fourier_com_rad_error=fourier_com_rad_mean[freq]-fourier_com_rad[freq]
+                    fourier_com_rad_sqerror=[fourier_com_rad_error[freq]**2]
+                    fourier_com_rad_ss=[sum(fourier_com_rad_sqerror[freq])]
+                    fourier_com_rad_sd=[fourier_com_rad_ss[freq]/len(fourier_com_rad[freq])-1]
                     # visual Fourier com
                     if fourier_freqs[freq]==4:
                         fourier_com_dot=[psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(0,0,1),colorSpace='rgb',radius=.002,edges=4)]
@@ -359,18 +361,19 @@ for block in range(numblocks):
                         fourier_com_rad_sd_pos_graph=[psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]+fourier_com_rad_sd[freq]),color=(0,freq/len(fourier_freqs),0),colorSpace='rgb',radius=.001,edges=4)]
                         fourier_com_rad_sd_neg_graph=[psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]-fourier_com_rad_sd[freq]),color=(0,freq/len(fourier_freqs),0),colorSpace='rgb',radius=.001,edges=4)]
                 else:
+                    #get fourier center of mass (com)
                     fourier_graph_freq.append(fourier_graph)
                     fourier_com_x.append(np.mean(fourier_acc_rad_x))
                     fourier_com_y.append(np.mean(fourier_acc_rad_y))
                     fourier_com_rad.append(np.sqrt(fourier_com_x[freq]**2+fourier_com_y[freq]**2))
                     #fourier com descriptive statistics
-                    fourier_com_rad_mean.append(np.mean(fourier_com_rad))
-                    fourier_com_rad_min.append(min(fourier_com_rad))
-                    fourier_com_rad_max.append(max(fourier_com_rad))
-                    fourier_com_rad_error.append(fourier_com_rad_mean-fourier_com_rad)
-                    fourier_com_rad_sqerror.append(fourier_com_rad_error**2)
-                    fourier_com_rad_ss.append(sum(fourier_com_rad_sqerror))
-                    fourier_com_rad_sd.append(fourier_com_rad_ss/len(fourier_com_rad)-1)
+                    fourier_com_rad_mean.append(np.mean(fourier_com_rad[freq]))
+                    fourier_com_rad_min.append(min(fourier_com_rad[freq]))
+                    fourier_com_rad_max.append(max(fourier_com_rad[freq]))
+                    fourier_com_rad_error.append(fourier_com_rad_mean[freq]-fourier_com_rad[freq])
+                    fourier_com_rad_sqerror.append(fourier_com_rad_error[freq]**2)
+                    fourier_com_rad_ss.append(sum(fourier_com_rad_sqerror[freq]))
+                    fourier_com_rad_sd.append(fourier_com_rad_ss[freq]/len(fourier_com_rad[freq])-1)
                     #visual Fourier com
                     if fourier_freqs[freq]==4:
                         fourier_com_dot.append(psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(0,0,1),colorSpace='rgb',radius=.002,edges=4))
