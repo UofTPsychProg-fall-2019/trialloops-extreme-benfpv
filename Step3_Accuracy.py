@@ -18,6 +18,31 @@ import psychopy
 from psychopy import visual, core, event, gui, logging
 import random
 
+############################
+#### Experiment Details ####
+############################
+# 1) Endogenous and exogenous attention cycling? 50% exogenous, 50% endogenous.
+# Can achieve this with 2 orbiting stimuli. Orbits randomly though! Can go
+# above or below 50% of the time.
+# OR, when a specific fixation color, track. Otherwise, don't track. Endogenous.
+# When specific target color, track. Otherwise, don't track. Exogenous.
+# Counterbalance colors. Points for keeping mouse still when not tracking?
+# BUT! Trial can end at any time, and must report location after RI. Click on where
+# stimulus was.
+# 1a) Analysis; Take frequency. Should both be 4 Hz. But, 4 Hz should be at
+# different points of cycle. How to parse this?
+# Analyze at what time points the endogenous and exogenous Hz occur.
+# Are they significantly different at any time points when compared?
+# Is their difference between frequency across time also at 4 Hz?
+# Then this would suggest they are cycling.
+
+# 2) Can feedback help tracking performance? Predict trial-by-trial accuracy
+# using heatmap/fourier.
+
+# TO DO
+# Above, and add a acc_rad visualization to heatmap. Line radius = mean acc_rad,
+# and circles for SD of acc_rad. 95% confidence interval?
+
 ########################
 #### Quick Settings ####
 ########################
@@ -48,22 +73,17 @@ win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=Tr
 
 #%% Notes
 #%% To Do:
-# Difference b/w mouse_pos and stim_pos
 # Save data
 # Heading direction data
 # Variable speeds, accelerations, etc.
 # Difference b/w mouse_pos and stim_pos depending on heading direction of stimulus
-# Keyboard inputs
 # Subject inputs, data saving, moving, etc.
-# Data analysis
-# Possible EEG adaptations
-# Possible EEG data analysis
 # Instructions?
 
 #%% Experiment Parameters
 #block and trial settings
 numblocks=1
-numtrialsperblock=2
+numtrialsperblock=6
 #mouse tracking
 if debug==1:
     mouse=event.Mouse(visible=True,win=win)
@@ -271,7 +291,7 @@ for block in range(numblocks):
                     heatmap.append(psychopy.visual.Circle(win=win,pos=(current_acc_x[current_pix],current_acc_y[current_pix]),color=current_pix/len(acc_rad),colorSpace='rgb',radius=.001,edges=4))
             # Fourier transform of mouse-stim accuracy throughout trial.
             fourier_freqs=[2,4,6,8,10] #frequency in seconds of one complete fourier cycle.
-            fourier_magnifier=6
+            fourier_magnifier=8
             for freq in range(len(fourier_freqs)):
                 if freq==0:
                     fourier_fpf=[trial_fps*fourier_freqs[freq]] #frames per fourier_freq
@@ -425,6 +445,10 @@ for block in range(numblocks):
             d_acc_x=[current_acc_x]
             d_acc_y=[current_acc_y]
             d_acc_rad=[acc_rad]
+            d_fourier_acc_rad_x=[fourier_acc_rad_x]
+            d_fourier_acc_rad_y=[fourier_acc_rad_y]
+            d_fourier_cog_x=[fourier_cog_x]
+            d_fourier_cog_y=[fourier_cog_y]
         else:
             d_block.append(current_block)
             d_trial.append(current_trial)
@@ -441,6 +465,10 @@ for block in range(numblocks):
             d_acc_x.append(current_acc_x)
             d_acc_y.append(current_acc_y)
             d_acc_rad.append(acc_rad)
+            d_fourier_acc_rad_x.append(fourier_acc_rad_x)
+            d_fourier_acc_rad_y.append(fourier_acc_rad_y)
+            d_fourier_cog_x.append(fourier_cog_x)
+            d_fourier_cog_y.append(fourier_cog_y)
 #%% Required clean up
 # this cell will make sure that your window displays for a while and then 
 # closes properly
