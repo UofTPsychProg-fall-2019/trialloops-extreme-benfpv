@@ -340,7 +340,7 @@ for block in range(numblocks):
                     fourier_com_rad_mean=[np.mean(fourier_com_rad[freq])]
                     fourier_com_rad_min=[min(fourier_com_rad[freq])]
                     fourier_com_rad_max=[max(fourier_com_rad[freq])]
-                    fourier_com_rad_error=fourier_com_rad_mean[freq]-fourier_com_rad[freq]
+                    fourier_com_rad_error=[fourier_com_rad_mean[freq]-fourier_com_rad[freq]]
                     fourier_com_rad_sqerror=[fourier_com_rad_error[freq]**2]
                     fourier_com_rad_ss=[sum(fourier_com_rad_sqerror[freq])]
                     fourier_com_rad_sd=[fourier_com_rad_ss[freq]/len(fourier_com_rad[freq])-1]
