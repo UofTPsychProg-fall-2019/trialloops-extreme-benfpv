@@ -88,7 +88,7 @@ win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=Tr
 #%% Experiment Parameters
 #block and trial settings
 numblocks=1
-numtrialsperblock=1
+numtrialsperblock=4
 #mouse tracking
 if debug==1:
     mouse=event.Mouse(visible=True,win=win)
@@ -300,7 +300,7 @@ for block in range(numblocks):
             heatmap_mean=psychopy.visual.Circle(win=win,pos=(np.mean(current_acc_x),np.mean(current_acc_y)),color=(0,1,0),colorSpace='rgb',radius=.002,edges=4)
             #%% Fourier transform of mouse-stim accuracy throughout trial.
             fourier_freqs=np.arange(fourier_min_freq,fourier_max_freq,fourier_freq_res) #frequency in seconds of one complete fourier cycle.
-            fourier_magnifier=18
+            fourier_magnifier=30
             for freq in range(len(fourier_freqs)):
                 if freq==0:
                     fourier_fpf=[trial_fps*fourier_freqs[freq]] #frames per fourier_freq
@@ -566,20 +566,27 @@ for block in range(numblocks):
             d_fourier_com_rad_sd.append(fourier_com_rad_sd)
         #%% By-Trial Prediction! Predict accuracy and fouriers.
         if trial_prediction==1:
+            time_prediction_start=trialClock.getTime()
             if trial==0:
                 p_acc_rad_mean=d_acc_rad_mean[trial]
                 p_acc_rad_sd=d_acc_rad_sd[trial]
                 p_fourier_com_rad_mean=np.zeros(len(fourier_com_rad_mean))
                 p_fourier_com_rad_sd=np.zeros(len(fourier_com_rad_sd))
-                for current_freq in range(len(d_fourier_com_rad_mean)):
-                    p_fourier_com_rad_mean[freq]=d_fourier_com_rad_mean[trial][freq]
-                    p_fourier_com_rad_sd[freq]=d_fourier_com_rad_sd[trial][freq]
+                for current_freq in range(len(d_fourier_com_rad_mean[trial])):
+                    p_fourier_com_rad_mean[current_freq]=d_fourier_com_rad_mean[trial][current_freq]
+                    p_fourier_com_rad_sd[current_freq]=d_fourier_com_rad_sd[trial][current_freq]
             else:
                 p_acc_rad_mean=sum(d_acc_rad_mean)/(trial+1)
                 p_acc_rad_sd=sum(d_acc_rad_sd)/(trial+1)
-                for current_freq in range(len(d_fourier_com_rad_mean)):
-                    p_fourier_com_rad_mean[freq]=sum(d_fourier_com_rad_mean[freq])/(trial+1)
-                    p_fourier_com_rad_sd[freq]=sum(d_fourier_com_rad_sd[freq])/(trial+1)
+                for current_freq in range(len(d_fourier_com_rad_mean[trial])):
+                    p_fourier_com_rad_mean[current_freq]=sum(d_fourier_com_rad_mean[current_freq])/(trial+1)
+                    p_fourier_com_rad_sd[current_freq]=sum(d_fourier_com_rad_sd[current_freq])/(trial+1)
+            time_prediction_end=trialClock.getTime()-time_prediction_start
+        #%% Save data!
+        if trial==0 and block==0:
+            d_time_prediction_end=[time_prediction_end]
+        else:
+            d_time_prediction_end.append(time_prediction_end)
 #%% Required clean up
 # this cell will make sure that your window displays for a while and then 
 # closes properly
