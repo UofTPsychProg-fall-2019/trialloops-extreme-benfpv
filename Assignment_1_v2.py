@@ -21,7 +21,8 @@ import random
 ###############################
 #### A. Experiment Details ####
 ###############################
-# 1a) Random movement of target stimulus. Shuffle 'random' functions.
+# 1a) Random movement of target stimulus. Shuffle 'random' functions. Need control for random mvt
+# by doing 'no movement' condition, analyze. No movement condition = no endogenous/exogenous attention.
 # 1b) Cue gives participants mean velocity information.
 # BUT! Trial can end at any time, and must report location after RI. Click on where
 # stimulus was.
@@ -44,11 +45,11 @@ import random
 ###########################
 # Note: Position is always defined as maximum of .5, and in coordinate plane.
 debug=1 #Debug mode on (1) or off (0).
-debug_fps=1 #shows fps data
+debug_fps=0 #shows fps data
 trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
 trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
 experiment=1 #Which experiment do you wish to run? Refer to A. Experiment Details.
-playback=1 #playback the trial after trial_analysis.
+playback=0 #playback the trial after trial_analysis.
 
 # fourier resolution
 fourier_min_freq=1 #minimum frequency we should fourier.
@@ -336,8 +337,8 @@ for block in range(numblocks):
                     fourier_com_rad=[np.sqrt(fourier_com_x[freq]**2+fourier_com_y[freq]**2)]
                     # Fourier CoM Descriptive Statistics
                     fourier_com_rad_mean=[fourier_com_rad[freq]]
-                    fourier_com_rad_error=[fourier_com_rad_mean[freq]-fourier_acc_rad_rad]
-                    fourier_com_rad_sqerror=[fourier_com_rad_error**2]
+                    fourier_com_rad_error=[fourier_com_rad_mean[freq]-fourier_acc_rad_rad[1::]]
+                    fourier_com_rad_sqerror=[fourier_com_rad_error[0]**2]
                     fourier_com_rad_ss=[sum(fourier_com_rad_sqerror)]
                     fourier_com_rad_sd=[fourier_com_rad_ss[freq]/len(fourier_com_rad)-1]
                     # visual Fourier com
@@ -364,8 +365,8 @@ for block in range(numblocks):
                     fourier_com_rad.append(np.sqrt(fourier_com_x[freq]**2+fourier_com_y[freq]**2))
                     # Fourier CoM Descriptive Statistics
                     fourier_com_rad_mean.append(fourier_com_rad[freq])
-                    fourier_com_rad_error.append(fourier_com_rad_mean[freq]-fourier_acc_rad_rad)
-                    fourier_com_rad_sqerror.append(fourier_com_rad_error**2)
+                    fourier_com_rad_error.append(fourier_com_rad_mean[freq]-fourier_acc_rad_rad[1::])
+                    fourier_com_rad_sqerror.append(fourier_com_rad_error[0]**2)
                     fourier_com_rad_ss.append(sum(fourier_com_rad_sqerror))
                     fourier_com_rad_sd.append(fourier_com_rad_ss[freq]/len(fourier_com_rad)-1)
                     #visual Fourier com
@@ -570,8 +571,8 @@ for block in range(numblocks):
                 p_fourier_com_rad_mean=np.zeros(len(fourier_com_rad_mean))
                 p_fourier_com_rad_sd=np.zeros(len(fourier_com_rad_sd))
                 for current_freq in range(len(d_fourier_com_rad_mean)):
-                    p_fourier_com_rad_mean[freq]=d_fourier_com_rad_mean[trial]
-                    p_fourier_com_rad_sd[freq]=d_fourier_com_rad_sd[trial]
+                    p_fourier_com_rad_mean[freq]=d_fourier_com_rad_mean[trial][freq]
+                    p_fourier_com_rad_sd[freq]=d_fourier_com_rad_sd[trial][freq]
             else:
                 p_acc_rad_mean=sum(d_acc_rad_mean)/(trial+1)
                 p_acc_rad_sd=sum(d_acc_rad_sd)/(trial+1)
