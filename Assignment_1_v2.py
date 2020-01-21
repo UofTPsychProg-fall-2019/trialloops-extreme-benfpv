@@ -23,10 +23,10 @@ import random
 ###############################
 # 1a) Random movement of target stimulus. Shuffle 'random' functions. Need control for random mvt
 # by doing 'no movement' condition, analyze. No movement condition = no endogenous/exogenous attention.
-# 1b) Cue gives participants mean velocity information.
+# 2) Cue gives participants mean velocity information.
 # BUT! Trial can end at any time, and must report location after RI. Click on where
 # stimulus was.
-# 1) Analysis; Take frequency. Should both be 8 Hz. But, 8 Hz should be at
+# 2) Analysis; Take frequency. Should both be 8 Hz. But, 8 Hz should be at
 # different points of cycle. How to parse this?
 # Analyze at what time points the endogenous and exogenous Hz occur.
 # Are they significantly different at any time points when compared?
@@ -48,9 +48,10 @@ debug=1 #Debug mode on (1) or off (0).
 debug_fps=0 #shows fps data
 trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
 trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
+frame_prediction=1 #Accuracy prediction frame-by-frame per trial.
 experiment=1 #Which experiment do you wish to run? Refer to A. Experiment Details.
 playback=0 #playback the trial after trial_analysis.
-full_analysis=0;
+full_analysis=0; #for later, when we analyze the entire experiment!
 
 # fourier resolution
 fourier_min_freq=0.2 #minimum frequency we should fourier (minimum is == fourier_freq_res).
@@ -143,11 +144,21 @@ for block in range(numblocks):
         #accuracy tracking
         current_acc_x=[0.0]
         current_acc_y=[0.0]
-        # INTER TRIAL INTERVAL (IVI)
+        if frame_prediction==1:
+            acc_rad=[0.0]
+            # Unidimensional Accuracy Descriptive Statistics
+            acc_rad_mean=[0.0]
+            acc_rad_error=[0.0]
+            acc_rad_sqerror=[0.0]
+            acc_rad_ss=[0.0]
+            acc_rad_sd=[0.0]
+            p_acc_rad_mean=[0.0]
+            p_acc_rad_sd=[0.0]
+        #%% INTER TRIAL INTERVAL (IVI)
         core.wait(iti_dur)
+        #%% Cue
         # clock start
         trialClock=core.Clock()
-        #%% Cue
         time_cue_start=trialClock.getTime()
         mouse.setPos([c1_xpos,c1_ypos])
         while 1:
@@ -258,6 +269,18 @@ for block in range(numblocks):
                     text_frame=psychopy.visual.TextStim(win=win,
                         name='text',text='frame'+str(frame_track),pos=(.5,.38),
                         color='white',height=.015)
+                if frame_prediction==1:
+                    # Collapse data to 1-dimensional (i.e., radius from target).
+                    acc_rad.append(np.sqrt(current_acc_x[frame_track]**2+current_acc_y[frame_track]**2))
+                    # Unidimensional Accuracy Descriptive Statistics
+                    acc_rad_mean.append(np.mean(acc_rad[1::]))
+                    acc_rad_error.append(acc_rad_mean-acc_rad[1::])
+                    acc_rad_sqerror.append(acc_rad_error**2)
+                    acc_rad_ss.append(sum(acc_rad_sqerror))
+                    acc_rad_sd.append(acc_rad_ss/len(acc_rad[1::])-1)
+                    p_acc_rad_mean.append(np.mean(acc_rad_mean[1::]))
+                    p_acc_rad_sd.append(np.mean(acc_rad_sd[1::]))
+                    predictcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='blue',radius=acc_rad_mean,edges=14)
                 if debug==1:
                     text.draw()
                     text_stim_pos.draw()
@@ -270,6 +293,8 @@ for block in range(numblocks):
                 fixation.draw()
                 tgtcircle.draw()
                 mousecircle.draw()
+                if frame_prediction==1:
+                    predictcircle.draw()
                 # then flip your window
                 win.flip()
         #%% By-trial Analysis
