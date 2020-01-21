@@ -50,11 +50,12 @@ trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
 trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
 experiment=1 #Which experiment do you wish to run? Refer to A. Experiment Details.
 playback=0 #playback the trial after trial_analysis.
+full_analysis=0;
 
 # fourier resolution
-fourier_min_freq=1 #minimum frequency we should fourier.
-fourier_max_freq=30 #maximum frequency we should fourier.
-fourier_freq_res=.25 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
+fourier_min_freq=0.2 #minimum frequency we should fourier (minimum is == fourier_freq_res).
+fourier_max_freq=12 #maximum frequency we should fourier.
+fourier_freq_res=.2 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
 
 # open a white full screen window
 screen_x=700
@@ -338,9 +339,9 @@ for block in range(numblocks):
                     # Fourier CoM Descriptive Statistics
                     fourier_com_rad_mean=[fourier_com_rad[freq]]
                     fourier_com_rad_error=[fourier_com_rad_mean[freq]-fourier_acc_rad_rad[1::]]
-                    fourier_com_rad_sqerror=[fourier_com_rad_error[0]**2]
-                    fourier_com_rad_ss=[sum(fourier_com_rad_sqerror)]
-                    fourier_com_rad_sd=[fourier_com_rad_ss[freq]/len(fourier_com_rad)-1]
+                    fourier_com_rad_sqerror=[fourier_com_rad_error[freq]**2]
+                    fourier_com_rad_ss=[sum(fourier_com_rad_sqerror[freq])]
+                    fourier_com_rad_sd=[fourier_com_rad_ss[freq]/len(fourier_freqs)-1]
                     # visual Fourier com
                     if fourier_freqs[freq]==4.0:
                         fourier_com_dot=[psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(0,0,1),colorSpace='rgb',radius=.003,edges=4)]
@@ -366,9 +367,9 @@ for block in range(numblocks):
                     # Fourier CoM Descriptive Statistics
                     fourier_com_rad_mean.append(fourier_com_rad[freq])
                     fourier_com_rad_error.append(fourier_com_rad_mean[freq]-fourier_acc_rad_rad[1::])
-                    fourier_com_rad_sqerror.append(fourier_com_rad_error[0]**2)
-                    fourier_com_rad_ss.append(sum(fourier_com_rad_sqerror))
-                    fourier_com_rad_sd.append(fourier_com_rad_ss[freq]/len(fourier_com_rad)-1)
+                    fourier_com_rad_sqerror.append(fourier_com_rad_error[freq]**2)
+                    fourier_com_rad_ss.append(sum(fourier_com_rad_sqerror[freq]))
+                    fourier_com_rad_sd.append(fourier_com_rad_ss[freq]/len(fourier_freqs)-1)
                     #visual Fourier com
                     if fourier_freqs[freq]==4.0:
                         fourier_com_dot.append(psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(0,0,1),colorSpace='rgb',radius=.003,edges=4))
