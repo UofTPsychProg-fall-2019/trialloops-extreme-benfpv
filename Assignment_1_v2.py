@@ -89,7 +89,7 @@ win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=Tr
 #%% Experiment Parameters
 #block and trial settings
 numblocks=1
-numtrialsperblock=4
+numtrialsperblock=500
 #mouse tracking
 if debug==1:
     mouse=event.Mouse(visible=True,win=win)
@@ -270,17 +270,29 @@ for block in range(numblocks):
                         name='text',text='frame'+str(frame_track),pos=(.5,.38),
                         color='white',height=.015)
                 if frame_prediction==1:
-                    # Collapse data to 1-dimensional (i.e., radius from target).
-                    acc_rad.append(np.sqrt(current_acc_x[frame_track]**2+current_acc_y[frame_track]**2))
-                    # Unidimensional Accuracy Descriptive Statistics
-                    acc_rad_mean.append(np.mean(acc_rad[1::]))
-                    acc_rad_error.append(acc_rad_mean-acc_rad[1::])
-                    acc_rad_sqerror.append(acc_rad_error**2)
-                    acc_rad_ss.append(sum(acc_rad_sqerror))
-                    acc_rad_sd.append(acc_rad_ss/len(acc_rad[1::])-1)
-                    p_acc_rad_mean.append(np.mean(acc_rad_mean[1::]))
-                    p_acc_rad_sd.append(np.mean(acc_rad_sd[1::]))
-                    predictcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='blue',radius=acc_rad_mean,edges=14)
+                    if frame_track==1:
+                        # Collapse data to 1-dimensional (i.e., radius from target).
+                        acc_rad.append(np.sqrt(current_acc_x[frame_track]**2+current_acc_y[frame_track]**2))
+                        # Unidimensional Accuracy Descriptive Statistics
+                        acc_rad_mean.append(np.mean(acc_rad[frame_track]))
+                        acc_rad_error.append(0.0)
+                        acc_rad_sqerror.append(0.0)
+                        acc_rad_ss.append(0.0)
+                        acc_rad_sd.append(0.0)
+                        p_acc_rad_mean.append(0.0)
+                        p_acc_rad_sd.append(0.0)
+                    if frame_track>1:
+                        # Collapse data to 1-dimensional (i.e., radius from target).
+                        acc_rad.append(np.sqrt(current_acc_x[frame_track]**2+current_acc_y[frame_track]**2))
+                        # Unidimensional Accuracy Descriptive Statistics
+                        acc_rad_mean.append(np.mean(acc_rad[frame_track]))
+                        acc_rad_error.append(acc_rad_mean[frame_track]-acc_rad[1::])
+                        acc_rad_sqerror.append(acc_rad_error[frame_track]**2)
+                        acc_rad_ss.append(sum(acc_rad_sqerror[frame_track]))
+                        acc_rad_sd.append(acc_rad_ss[frame_track]/len(acc_rad[1::])-1)
+                        p_acc_rad_mean.append(np.mean(acc_rad_mean[frame_track]))
+                        p_acc_rad_sd.append(np.mean(acc_rad_sd[1::]))
+                        predictcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='blue',radius=p_acc_rad_mean[frame_track],edges=14)
                 if debug==1:
                     text.draw()
                     text_stim_pos.draw()
@@ -293,7 +305,7 @@ for block in range(numblocks):
                 fixation.draw()
                 tgtcircle.draw()
                 mousecircle.draw()
-                if frame_prediction==1:
+                if frame_prediction==1 and frame_track>1:
                     predictcircle.draw()
                 # then flip your window
                 win.flip()
