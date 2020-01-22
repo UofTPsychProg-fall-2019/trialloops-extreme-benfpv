@@ -56,16 +56,16 @@ import random
 debug=1 #Debug mode on (1) or off (0).
 debug_fps=0 #shows fps data
 trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
-trial_prediction=0 #Within-trial prediction of accuracy (acc_rad).
-frame_prediction=0 #Accuracy prediction frame-by-frame per trial.
+trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
+frame_prediction=1 #Accuracy prediction frame-by-frame per trial.
 experiment=1 #Which experiment do you wish to run? Refer to A. Experiment Details.
 playback=1 #playback the trial after trial_analysis.
 full_analysis=0; #for later, when we analyze the entire experiment!
 
 # fourier resolution
-fourier_min_freq=0.2 #minimum frequency we should fourier (minimum is == fourier_freq_res).
-fourier_max_freq=12 #maximum frequency we should fourier.
-fourier_freq_res=.2 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
+fourier_min_freq=2 #minimum frequency we should fourier (minimum is == fourier_freq_res).
+fourier_max_freq=10 #maximum frequency we should fourier.
+fourier_freq_res=.02 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
 
 # open a white full screen window
 screen_x=700
@@ -98,7 +98,7 @@ win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=Tr
 #%% Experiment Parameters
 #block and trial settings
 numblocks=1
-numtrialsperblock=500
+numtrialsperblock=1
 #mouse tracking
 if debug==1:
     mouse=event.Mouse(visible=True,win=win)
@@ -142,7 +142,7 @@ for block in range(numblocks):
         current_fps=[0.0]
         # durations/timing/randomized times
         current_cue_dur=random.randint(500,1500)/1000
-        current_track_dur=random.randint(5000,10000)/1000
+        current_track_dur=random.randint(40000,45000)/1000 #5000-15000 is ok
         current_ri_dur=1
         # vwm reset conditions
         start_reset=random.randint(0,1)
@@ -183,10 +183,10 @@ for block in range(numblocks):
             # moving stims
             mousecircle=psychopy.visual.Circle(win=win,pos=(mouse.getPos()[0],mouse.getPos()[1]),color='grey',radius=c1_rad/3,edges=14)
             # then draw all stimuli
-            fixation.draw()
             tgtcircle.draw()
             mousecircle.draw()
             text.draw()
+            fixation.draw()
             # then flip your window
             win.flip()
         #%% Track
@@ -299,7 +299,7 @@ for block in range(numblocks):
                         acc_rad_sqerror.append(acc_rad_error[frame_track]**2)
                         acc_rad_ss.append(sum(acc_rad_sqerror[frame_track]))
                         acc_rad_sd.append(acc_rad_ss[frame_track]/len(acc_rad[1::])-1)
-                        p_acc_rad_mean.append(np.mean(acc_rad_mean[frame_track]))
+                        p_acc_rad_mean.append(np.mean(acc_rad_mean[1::]))
                         p_acc_rad_sd.append(np.mean(acc_rad_sd[1::]))
                         predictcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='blue',radius=p_acc_rad_mean[frame_track],edges=14)
                 if debug==1:
@@ -311,11 +311,11 @@ for block in range(numblocks):
                     text_frame.draw()
                     text_time.draw()
                 # then draw all stimuli
-                fixation.draw()
-                tgtcircle.draw()
-                mousecircle.draw()
                 if frame_prediction==1 and frame_track>1:
                     predictcircle.draw()
+                tgtcircle.draw()
+                mousecircle.draw()
+                fixation.draw()
                 # then flip your window
                 win.flip()
         #%% By-trial Analysis
@@ -346,7 +346,7 @@ for block in range(numblocks):
             heatmap_mean=psychopy.visual.Circle(win=win,pos=(np.mean(current_acc_x),np.mean(current_acc_y)),color=(0,1,0),colorSpace='rgb',radius=.002,edges=4)
             #%% Fourier transform of mouse-stim accuracy throughout trial.
             fourier_freqs=np.arange(fourier_min_freq,fourier_max_freq,fourier_freq_res) #frequency in seconds of one complete fourier cycle.
-            fourier_magnifier=30
+            fourier_magnifier=50
             for freq in range(len(fourier_freqs)):
                 if freq==0:
                     fourier_fpf=[trial_fps*fourier_freqs[freq]] #frames per fourier_freq
@@ -436,7 +436,6 @@ for block in range(numblocks):
         # RI - time taken to do the trial analyses.
         time_analysis_dur=trialClock.getTime()-time_analysis_start
         # then draw all stimuli
-        fixation.draw()
         if debug==1:
             text.draw()
             text_stim_pos.draw()
@@ -445,6 +444,7 @@ for block in range(numblocks):
             text_fps.draw()
             text_frame.draw()
             text_time.draw()
+        fixation.draw()
         # then flip your window
         win.flip()
         core.wait(current_ri_dur-time_analysis_dur)
@@ -460,13 +460,13 @@ for block in range(numblocks):
                 name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(.7,.35),
                 color='white',height=.015)
         #draw heatmap
-        fixation.draw()
         text_fb.draw()
         for current_pix in range(len(heatmap)):
             heatmap[current_pix].draw()
         heatmap_mean.draw()
         text_heatmap.draw()
         text_heatmap_mean.draw()
+        fixation.draw()
         # then flip your window
         win.flip()
         core.wait(current_fb_dur/2)
@@ -478,7 +478,6 @@ for block in range(numblocks):
             name='text',text='cyan:4hz blue:com, pink:8hz red:com, white:other hz green:com',pos=(.7,.4),
             color='white',height=.015)
         #draw Fourier
-        fixation.draw()
         text_fourier.draw()
         text_fourier_desc.draw()
         for current_freq in range(len(fourier_graph_freq)):
@@ -489,9 +488,10 @@ for block in range(numblocks):
             fourier_com_dot[current_freq].draw()
             fourier_com_dot[freq==4.0].draw()
             fourier_com_dot[freq==8.0].draw()
+        fixation.draw()
         # then flip your window
         win.flip()
-        core.wait(current_fb_dur*1.5)
+        core.wait(current_fb_dur*1.5*5000)
         # Fourier com graph
         text_fourier_com=psychopy.visual.TextStim(win=win,
             name='text',text='fourier: center of mass amplitude by frequency',pos=(.7,.45),
@@ -500,11 +500,13 @@ for block in range(numblocks):
             name='text',text='blue:4hz com, red:8hz com, green:other hz com',pos=(.7,.4),
             color='white',height=.015)
         # draw fourier com graphs
-        fixation.draw()
         text_fourier_com.draw()
         text_fourier_com_desc.draw()
         for current_freq in range(len(fourier_graph_freq)):
             fourier_com_rad_graph[current_freq].draw()
+            fourier_com_rad_graph[freq==4.0].draw()
+            fourier_com_rad_graph[freq==8.0].draw()
+        fixation.draw()
         # then flip your window
         win.flip()
         core.wait(current_fb_dur*1.5)
@@ -536,13 +538,13 @@ for block in range(numblocks):
                         name='text',text='time'+str(time_track_dur*frame_2/frame_track_end),pos=(.5,.40),
                         color='white',height=.015)
                     # then draw all stimuli
-                    fixation.draw()
                     text.draw()
                     tgtcircle_2.draw()
                     mousecircle_2.draw()
                     text_frame.draw()
                     text_stim_pos.draw()
                     text_mouse_pos.draw()
+                    fixation.draw()
                     # then flip your window
                     win.flip()
         #%% Save data!
