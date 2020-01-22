@@ -21,8 +21,17 @@ import random
 ###############################
 #### A. Experiment Details ####
 ###############################
-# 1a) Random movement of target stimulus. Shuffle 'random' functions. Need control for random mvt
-# by doing 'no movement' condition, analyze. No movement condition = no endogenous/exogenous attention.
+# PROJECT 1 CONCERNS ONLY 1A.
+# 1a) Participants track a moving stimulus with their mouse, to the best of their ability.
+# The experimental question is whether a reset in stimulus location before tracking results in a different
+# attentional signature (i.e., changed mouse-stimulus tracking accuracy, or weaker 8hz to other hz as
+# measured by fourier transform).
+# Please ensure in B. Quick Settings that debug, debug_fps, trial_analysis, trial_prediction, playback,
+# and full_analysis are set to 0 before running participants.
+
+# Note: My goal is to have trial-by-trial fourier and trial-by-trial frame-by-frame accuracy 
+# correlated, then provide trial-by-trial feedback of predicted attentional state (good/bad)!
+
 # 2) Cue gives participants mean velocity information.
 # BUT! Trial can end at any time, and must report location after RI. Click on where
 # stimulus was.
@@ -47,10 +56,10 @@ import random
 debug=1 #Debug mode on (1) or off (0).
 debug_fps=0 #shows fps data
 trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
-trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
-frame_prediction=1 #Accuracy prediction frame-by-frame per trial.
+trial_prediction=0 #Within-trial prediction of accuracy (acc_rad).
+frame_prediction=0 #Accuracy prediction frame-by-frame per trial.
 experiment=1 #Which experiment do you wish to run? Refer to A. Experiment Details.
-playback=0 #playback the trial after trial_analysis.
+playback=1 #playback the trial after trial_analysis.
 full_analysis=0; #for later, when we analyze the entire experiment!
 
 # fourier resolution
@@ -552,6 +561,7 @@ for block in range(numblocks):
             d_time_track_dur=[time_track_dur]
             d_frame_track_end=[frame_track_end]
             d_current_fps=[current_fps]
+            d_start_reset=[start_reset]
             #raw positions
             d_stim_pos=[stim_pos]
             d_mouse_pos=[mouse_pos]
@@ -583,6 +593,7 @@ for block in range(numblocks):
             d_time_track_dur.append(time_track_dur)
             d_frame_track_end.append(frame_track_end)
             d_current_fps.append(current_fps)
+            d_start_reset.append(start_reset)
             #raw positions
             d_stim_pos.append(stim_pos)
             d_mouse_pos.append(mouse_pos)
