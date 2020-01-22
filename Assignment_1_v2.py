@@ -631,10 +631,10 @@ for block in range(numblocks):
                     p_fourier_com_rad_sd[current_freq]=sum(d_fourier_com_rad_sd[current_freq])/(trial+1)
             time_prediction_end=trialClock.getTime()-time_prediction_start
         #%% Save data!
-        if trial==0 and block==0:
-            d_time_prediction_end=[time_prediction_end]
-        else:
-            d_time_prediction_end.append(time_prediction_end)
+            if trial==0 and block==0:
+                d_time_prediction_end=[time_prediction_end]
+            else:
+                d_time_prediction_end.append(time_prediction_end)
 #%% Required clean up
 # this cell will make sure that your window displays for a while and then 
 # closes properly
