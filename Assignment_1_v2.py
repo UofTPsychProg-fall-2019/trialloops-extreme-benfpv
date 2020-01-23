@@ -492,8 +492,8 @@ for block in range(numblocks):
                 fourier_graph_freq[freq==4.0][current_pix].draw()
                 fourier_graph_freq[freq==8.0][current_pix].draw()
             fourier_com_dot[current_freq].draw()
-            fourier_com_dot[freq==4.0].draw()
-            fourier_com_dot[freq==8.0].draw()
+        fourier_com_dot[freq==4.0].draw()
+        fourier_com_dot[freq==8.0].draw()
         fixation.draw()
         # then flip your window
         win.flip()
