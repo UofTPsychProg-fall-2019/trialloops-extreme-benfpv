@@ -53,23 +53,24 @@ import random
 #### B. Quick Settings ####
 ###########################
 # Note: Position is always defined as maximum of .5, and in coordinate plane.
-debug=1 #Debug mode on (1) or off (0).
+fullscreen=1 #fullscreen win or not?
+debug=0 #Debug mode on (1) or off (0).
 debug_fps=0 #shows fps data
 trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
 trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
 frame_prediction=1 #Accuracy prediction frame-by-frame per trial.
 experiment=1 #Which experiment do you wish to run? Refer to A. Experiment Details.
-playback=1 #playback the trial after trial_analysis.
+playback=0 #playback the trial after trial_analysis.
 full_analysis=0; #for later, when we analyze the entire experiment!
 
 # fourier resolution
 fourier_min_freq=2 #minimum frequency we should fourier (minimum is == fourier_freq_res).
 fourier_max_freq=10 #maximum frequency we should fourier.
-fourier_freq_res=.02 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
+fourier_freq_res=.2 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
 
 # open a white full screen window
-screen_x=700
-screen_y=700
+screen_x=5120
+screen_y=2880
 framerate=60
 
 # background color
@@ -78,7 +79,10 @@ background_color='black'
 time_per_frame=1/framerate
 time_per_frame_precision=time_per_frame/4
 
-win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=True, color=background_color, units='height')
+if fullscreen==1:
+    win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=True, allowGUI=True, color=background_color, units='height')
+else:
+    win = psychopy.visual.Window(size=[screen_x,screen_y],fullscr=False, allowGUI=True, color=background_color, units='height')
 
 #%% up to you!
 # this is where you build a trial that you might actually use one day!
@@ -105,7 +109,7 @@ if debug==1:
 else:
     mouse=event.Mouse(visible=False,win=win)
 #object parameters
-c1_rad=.02
+c1_rad=.01
 #physical limits
 spdlmt=.005
 acclmt=1
@@ -346,7 +350,7 @@ for block in range(numblocks):
             heatmap_mean=psychopy.visual.Circle(win=win,pos=(np.mean(current_acc_x),np.mean(current_acc_y)),color=(0,1,0),colorSpace='rgb',radius=.002,edges=4)
             #%% Fourier transform of mouse-stim accuracy throughout trial.
             fourier_freqs=np.arange(fourier_min_freq,fourier_max_freq,fourier_freq_res) #frequency in seconds of one complete fourier cycle.
-            fourier_magnifier=50
+            fourier_magnifier=30
             for freq in range(len(fourier_freqs)):
                 if freq==0:
                     fourier_fpf=[trial_fps*fourier_freqs[freq]] #frames per fourier_freq
@@ -450,36 +454,38 @@ for block in range(numblocks):
         core.wait(current_ri_dur-time_analysis_dur)
         #%% By-trial Feedback
         # Heatmap
-        text_heatmap=psychopy.visual.TextStim(win=win,
-            name='text',text='trial accuracy t-collapsed heatmap',pos=(.7,.40),
-            color='white',height=.015)
-        text_heatmap_mean=psychopy.visual.TextStim(win=win,
-            name='text',text='white:accuracy, green:mean accuracy',pos=(.7,.45),
-            color='white',height=.015)
-        text_fb=psychopy.visual.TextStim(win=win,
-                name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(.7,.35),
+        if debug==1:
+            text_heatmap=psychopy.visual.TextStim(win=win,
+                name='text',text='trial accuracy t-collapsed heatmap',pos=(.7,.40),
                 color='white',height=.015)
-        #draw heatmap
-        text_fb.draw()
+            text_heatmap_mean=psychopy.visual.TextStim(win=win,
+                name='text',text='white:accuracy, green:mean accuracy',pos=(.7,.45),
+                color='white',height=.015)
+            text_fb=psychopy.visual.TextStim(win=win,
+                    name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(.7,.35),
+                    color='white',height=.015)
+            #draw heatmap
+            text_fb.draw()
+            text_heatmap.draw()
+            text_heatmap_mean.draw()
         for current_pix in range(len(heatmap)):
             heatmap[current_pix].draw()
         heatmap_mean.draw()
-        text_heatmap.draw()
-        text_heatmap_mean.draw()
         fixation.draw()
         # then flip your window
         win.flip()
         core.wait(current_fb_dur/2)
-        # Fourier transform
-        text_fourier=psychopy.visual.TextStim(win=win,
-            name='text',text='trial accuracy fourier transform',pos=(.7,.45),
-            color='white',height=.015)
-        text_fourier_desc=psychopy.visual.TextStim(win=win,
-            name='text',text='cyan:4hz blue:com, pink:8hz red:com, white:other hz green:com',pos=(.7,.4),
-            color='white',height=.015)
-        #draw Fourier
-        text_fourier.draw()
-        text_fourier_desc.draw()
+        if debug==1:
+            # Fourier transform
+            text_fourier=psychopy.visual.TextStim(win=win,
+                name='text',text='trial accuracy fourier transform',pos=(.7,.45),
+                color='white',height=.015)
+            text_fourier_desc=psychopy.visual.TextStim(win=win,
+                name='text',text='cyan:4hz blue:com, pink:8hz red:com, white:other hz green:com',pos=(.7,.4),
+                color='white',height=.015)
+            #draw Fourier
+            text_fourier.draw()
+            text_fourier_desc.draw()
         for current_freq in range(len(fourier_graph_freq)):
             for current_pix in range(len(fourier_graph)):
                 fourier_graph_freq[current_freq][current_pix].draw()
@@ -491,21 +497,22 @@ for block in range(numblocks):
         fixation.draw()
         # then flip your window
         win.flip()
-        core.wait(current_fb_dur*1.5*5000)
-        # Fourier com graph
-        text_fourier_com=psychopy.visual.TextStim(win=win,
-            name='text',text='fourier: center of mass amplitude by frequency',pos=(.7,.45),
-            color='white',height=.015)
-        text_fourier_com_desc=psychopy.visual.TextStim(win=win,
-            name='text',text='blue:4hz com, red:8hz com, green:other hz com',pos=(.7,.4),
-            color='white',height=.015)
-        # draw fourier com graphs
-        text_fourier_com.draw()
-        text_fourier_com_desc.draw()
+        core.wait(current_fb_dur*1.5)
+        if debug==1:
+            # Fourier com graph
+            text_fourier_com=psychopy.visual.TextStim(win=win,
+                name='text',text='fourier: center of mass amplitude by frequency',pos=(.7,.45),
+                color='white',height=.015)
+            text_fourier_com_desc=psychopy.visual.TextStim(win=win,
+                name='text',text='blue:4hz com, red:8hz com, green:other hz com',pos=(.7,.4),
+                color='white',height=.015)
+            # draw fourier com graphs
+            text_fourier_com.draw()
+            text_fourier_com_desc.draw()
         for current_freq in range(len(fourier_graph_freq)):
             fourier_com_rad_graph[current_freq].draw()
-            fourier_com_rad_graph[freq==4.0].draw()
-            fourier_com_rad_graph[freq==8.0].draw()
+        fourier_com_rad_graph[freq==4.0].draw()
+        fourier_com_rad_graph[freq==8.0].draw()
         fixation.draw()
         # then flip your window
         win.flip()
