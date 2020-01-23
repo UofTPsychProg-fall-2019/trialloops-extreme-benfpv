@@ -41,7 +41,7 @@ import random
 # Are they significantly different at any time points when compared?
 # Is their difference between frequency across time also at 4 Hz?
 # Then this would suggest they are cycling.
-#
+
 # 2) Can feedback help tracking performance? Predict trial-by-trial accuracy
 # using heatmap/fourier.
 #
@@ -53,25 +53,32 @@ import random
 #### B. Quick Settings ####
 ###########################
 # Note: Position is always defined as maximum of .5, and in coordinate plane.
-fullscreen=1 #fullscreen win or not?
-debug=0 #Debug mode on (1) or off (0).
+fullscreen=0 #fullscreen win or not?
+debug=1 #Debug mode on (1) or off (0).
 debug_fps=0 #shows fps data
 trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
+trial_analysis_visual=0 # If trial_analysis is 1, and if you want to visualize trial_analysis.
 trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
 frame_prediction=1 #Accuracy prediction frame-by-frame per trial.
-experiment=1 #Which experiment do you wish to run? Refer to A. Experiment Details.
+frame_prediction_visual=1 #if frame_prediction is 1, and you want to visualize frame_prediction.
 playback=0 #playback the trial after trial_analysis.
-full_analysis=0; #for later, when we analyze the entire experiment!
+full_analysis=0 #for later, when we analyze the entire experiment!
+trail_visual=1 #calculate and see the trail (acceleraion amount per frame)
 
 # fourier resolution
-fourier_min_freq=.2 #minimum frequency we should fourier (minimum is == fourier_freq_res).
+fourier_min_freq=1 #minimum frequency we should fourier (minimum is == fourier_freq_res).
 fourier_max_freq=12 #maximum frequency we should fourier.
-fourier_freq_res=.1 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
+fourier_freq_res=.25 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
 
 # open a white full screen window
-screen_x=5120
-screen_y=2880
+screen_x=1920  #5120 iMac
+screen_y=1080  #2880 iMac
 framerate=60
+
+if debug==1:
+    screen_x=800
+    screen_y=800
+    framerate=60
 
 # background color
 background_color='black'
@@ -102,7 +109,7 @@ else:
 #%% Experiment Parameters
 #block and trial settings
 numblocks=1
-numtrialsperblock=1
+numtrialsperblock=2
 #mouse tracking
 if debug==1:
     mouse=event.Mouse(visible=True,win=win)
@@ -136,17 +143,22 @@ for block in range(numblocks):
         #loop stuff
         frame_all=0
         frame_track=0
-        # start object physics
+        # start stimulus physics
         c1_xpos=(random.randint(0,1000)/1000)*(poslmt-startpos_buf)
         c1_ypos=(random.randint(0,1000)/1000)*(poslmt-startpos_buf)
         c1_xacc=0*acc_multiplier
         c1_yacc=0*acc_multiplier
-        #trail drawing
+        # stimulus acceleration data
+        c1_xacc_data=[0]
+        c1_yacc_data=[0]
+        c1_racc_data=[0]
+        c1_deg_data=[0]
+        # trail/fps data
         trail=[0]
         current_fps=[0.0]
         # durations/timing/randomized times
         current_cue_dur=random.randint(500,1500)/1000
-        current_track_dur=random.randint(40000,45000)/1000 #5000-15000 is ok
+        current_track_dur=random.randint(5000,15000)/1000 #5000-15000 is ok
         current_ri_dur=1
         # vwm reset conditions
         start_reset=random.randint(0,1)
@@ -234,6 +246,12 @@ for block in range(numblocks):
                 elif c1_ypos<-poslmt:
                     c1_ypos=-poslmt
                     c1_yacc=-c1_yacc*fric
+                # stimulus acceleration data
+                c1_xacc_data.append(c1_xacc)
+                c1_yacc_data.append(c1_yacc)
+                c1_racc_data.append(np.sqrt(c1_xacc_data[frame_track]**2+c1_yacc_data[frame_track]**2))
+                # stimulus direction data
+                c1_deg_data.append(np.arcsin((stim_pos[frame_track][1]-stim_pos[frame_track-1][1])/(stim_pos[frame_track][0]-stim_pos[frame_track-1][0])))
                 if frame_track==1:
                     time_track_start=time_track
                     # track initiation accel/reset condition
@@ -254,10 +272,10 @@ for block in range(numblocks):
                         name='text',text='trial'+str(trial),pos=(.5,.46),
                         color='white',height=.015)
                 # draw the trail
-                if trail==1:
-                    trail.append(psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='white',radius=c1_rad/6,edges=3))
+                if trail_visual==1:
+                    trail.append(psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color=[.1+round(c1_racc_data[frame_track]*100,1),0,0],colorSpace='rgb',radius=c1_rad/5,edges=3))
                     for current_frame in range(frame_track):
-                        if current_frame%5 == 0:
+                        if current_frame%3 == 0:
                             trail[current_frame+1].draw()
                 # position text
                 if debug==1:
@@ -305,7 +323,9 @@ for block in range(numblocks):
                         acc_rad_sd.append(acc_rad_ss[frame_track]/len(acc_rad[1::])-1)
                         p_acc_rad_mean.append(np.mean(acc_rad_mean[1::]))
                         p_acc_rad_sd.append(np.mean(acc_rad_sd[1::]))
-                        predictcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='blue',radius=p_acc_rad_mean[frame_track],edges=14)
+                        if frame_prediction_visual==1:
+                            predictcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='blue',radius=p_acc_rad_mean[frame_track],edges=14)
+                            stim_dir=psychopy.visual.Circle(win=win,pos=(c1_xpos+c1_xacc,c1_ypos+c1_yacc),color='white',radius=c1_rad/3,edges=3)
                 if debug==1:
                     text.draw()
                     text_stim_pos.draw()
@@ -315,7 +335,7 @@ for block in range(numblocks):
                     text_frame.draw()
                     text_time.draw()
                 # then draw all stimuli
-                if frame_prediction==1 and frame_track>1:
+                if frame_prediction==1 and frame_prediction_visual==1 and frame_track>1:
                     predictcircle.draw()
                 tgtcircle.draw()
                 mousecircle.draw()
@@ -364,25 +384,26 @@ for block in range(numblocks):
                         fourier_acc_rad_x=[np.cos(fourier_dpf[freq]*acc)*acc_rad[acc]]
                         fourier_acc_rad_y=[np.sin(fourier_dpf[freq]*acc)*acc_rad[acc]]
                         fourier_acc_rad_rad=[np.sqrt(fourier_acc_rad_x[acc]**2+fourier_acc_rad_y[acc]**2)]
-                        if fourier_freqs[freq]==4.0:
+                        if fourier_freqs[freq]==4.0 and trial_analysis_visual==1:
                             fourier_graph=[psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc]*fourier_magnifier,fourier_acc_rad_y[acc]*fourier_magnifier),color=(0,1,1),colorSpace='rgb',radius=.001,edges=4)]
-                        elif fourier_freqs[freq]==8.0:
+                        elif fourier_freqs[freq]==8.0 and trial_analysis_visual==1:
                             fourier_graph=[psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc]*fourier_magnifier,fourier_acc_rad_y[acc]*fourier_magnifier),color=(1,1,0),colorSpace='rgb',radius=.001,edges=4)]
-                        else:
+                        elif trial_analysis_visual==1:
                             fourier_graph=[psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc]*fourier_magnifier,fourier_acc_rad_y[acc]*fourier_magnifier),color=freq/len(fourier_freqs),colorSpace='rgb',radius=.001,edges=4)]
                     else:
                         fourier_acc_rad_x.append(np.cos(fourier_dpf[freq]*acc)*acc_rad[acc])
                         fourier_acc_rad_y.append(np.sin(fourier_dpf[freq]*acc)*acc_rad[acc])
                         fourier_acc_rad_rad.append(np.sqrt(fourier_acc_rad_x[acc]**2+fourier_acc_rad_y[acc]**2))
-                        if fourier_freqs[freq]==4.0:
+                        if fourier_freqs[freq]==4.0 and trial_analysis_visual==1:
                             fourier_graph.append(psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc]*fourier_magnifier,fourier_acc_rad_y[acc]*fourier_magnifier),color=(0,1,1),colorSpace='rgb',radius=.001,edges=4))
-                        elif fourier_freqs[freq]==8.0:
+                        elif fourier_freqs[freq]==8.0 and trial_analysis_visual==1:
                             fourier_graph.append(psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc]*fourier_magnifier,fourier_acc_rad_y[acc]*fourier_magnifier),color=(1,1,0),colorSpace='rgb',radius=.001,edges=4))
-                        else:
+                        elif trial_analysis_visual==1:
                             fourier_graph.append(psychopy.visual.Circle(win=win,pos=(fourier_acc_rad_x[acc]*fourier_magnifier,fourier_acc_rad_y[acc]*fourier_magnifier),color=freq/len(fourier_freqs),colorSpace='rgb',radius=.001,edges=4))
                 if freq==0:
                     #get fourier center of mass (CoM)
-                    fourier_graph_freq=[fourier_graph]
+                    if trial_analysis_visual==1:
+                        fourier_graph_freq=[fourier_graph]
                     fourier_com_x=[np.mean(fourier_acc_rad_x)]
                     fourier_com_y=[np.mean(fourier_acc_rad_y)]
                     fourier_com_rad=[np.sqrt(fourier_com_x[freq]**2+fourier_com_y[freq]**2)]
@@ -393,24 +414,25 @@ for block in range(numblocks):
                     fourier_com_rad_ss=[sum(fourier_com_rad_sqerror[freq])]
                     fourier_com_rad_sd=[fourier_com_rad_ss[freq]/len(fourier_freqs)-1]
                     # visual Fourier com
-                    if fourier_freqs[freq]==4.0:
+                    if fourier_freqs[freq]==4.0 and trial_analysis_visual==1:
                         fourier_com_dot=[psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(0,0,1),colorSpace='rgb',radius=.003,edges=4)]
                         fourier_com_rad_graph=[psychopy.visual.Circle(win=win,pos=(-.1*fourier_magnifier*.1+freq*fourier_freq_res*.01*fourier_magnifier*.1,fourier_com_rad[freq]*fourier_magnifier),color=(0,0,1),colorSpace='rgb',radius=.002,edges=4)]
                         #fourier_com_rad_sd_pos_graph=[psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]+fourier_com_rad_sd[freq]),color=(0,0,1),colorSpace='rgb',radius=.001,edges=4)]
                         #fourier_com_rad_sd_neg_graph=[psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]-fourier_com_rad_sd[freq]),color=(0,0,1),colorSpace='rgb',radius=.001,edges=4)]
-                    elif fourier_freqs[freq]==8.0:
+                    elif fourier_freqs[freq]==8.0 and trial_analysis_visual==1:
                         fourier_com_dot=[psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(1,0,0),colorSpace='rgb',radius=.003,edges=4)]
                         fourier_com_rad_graph=[psychopy.visual.Circle(win=win,pos=(-.1*fourier_magnifier*.1+freq*fourier_freq_res*.01*fourier_magnifier*.1,fourier_com_rad[freq]*fourier_magnifier),color=(1,0,0),colorSpace='rgb',radius=.002,edges=4)]
                         #fourier_com_rad_sd_pos_graph=[psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]+fourier_com_rad_sd[freq]),color=(1,0,0),colorSpace='rgb',radius=.001,edges=4)]
                         #fourier_com_rad_sd_neg_graph=[psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]-fourier_com_rad_sd[freq]),color=(1,0,0),colorSpace='rgb',radius=.001,edges=4)]
-                    else:
+                    elif trial_analysis_visual==1:
                         fourier_com_dot=[psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(0,freq/len(fourier_freqs),0),colorSpace='rgb',radius=.002,edges=4)]
                         fourier_com_rad_graph=[psychopy.visual.Circle(win=win,pos=(-.1*fourier_magnifier*.1+freq*fourier_freq_res*.01*fourier_magnifier*.1,fourier_com_rad[freq]*fourier_magnifier),color=(1,1,1),colorSpace='rgb',radius=.001,edges=4)]
                         #fourier_com_rad_sd_pos_graph=[psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]+fourier_com_rad_sd[freq]),color=(0,freq/len(fourier_freqs),0),colorSpace='rgb',radius=.001,edges=4)]
                         #fourier_com_rad_sd_neg_graph=[psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]-fourier_com_rad_sd[freq]),color=(0,freq/len(fourier_freqs),0),colorSpace='rgb',radius=.001,edges=4)]
                 else:
                     #get fourier center of mass (com)
-                    fourier_graph_freq.append(fourier_graph)
+                    if trial_analysis_visual==1:
+                        fourier_graph_freq.append(fourier_graph)
                     fourier_com_x.append(np.mean(fourier_acc_rad_x))
                     fourier_com_y.append(np.mean(fourier_acc_rad_y))
                     fourier_com_rad.append(np.sqrt(fourier_com_x[freq]**2+fourier_com_y[freq]**2))
@@ -421,17 +443,17 @@ for block in range(numblocks):
                     fourier_com_rad_ss.append(sum(fourier_com_rad_sqerror[freq]))
                     fourier_com_rad_sd.append(fourier_com_rad_ss[freq]/len(fourier_freqs)-1)
                     #visual Fourier com
-                    if fourier_freqs[freq]==4.0:
+                    if fourier_freqs[freq]==4.0 and trial_analysis_visual==1:
                         fourier_com_dot.append(psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(0,0,1),colorSpace='rgb',radius=.003,edges=4))
                         fourier_com_rad_graph.append(psychopy.visual.Circle(win=win,pos=(-.1*fourier_magnifier*.1+freq*fourier_freq_res*.01*fourier_magnifier*.1,fourier_com_rad[freq]*fourier_magnifier),color=(0,0,1),colorSpace='rgb',radius=.002,edges=4))
                         #fourier_com_rad_sd_pos_graph.append(psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]+fourier_com_rad_sd[freq]),color=(0,0,1),colorSpace='rgb',radius=.001,edges=4))
                         #fourier_com_rad_sd_neg_graph.append(psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]-fourier_com_rad_sd[freq]),color=(0,0,1),colorSpace='rgb',radius=.001,edges=4))
-                    elif fourier_freqs[freq]==8.0:
+                    elif fourier_freqs[freq]==8.0 and trial_analysis_visual==1:
                         fourier_com_dot.append(psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(1,0,0),colorSpace='rgb',radius=.003,edges=4))
                         fourier_com_rad_graph.append(psychopy.visual.Circle(win=win,pos=(-.1*fourier_magnifier*.1+freq*fourier_freq_res*.01*fourier_magnifier*.1,fourier_com_rad[freq]*fourier_magnifier),color=(1,0,0),colorSpace='rgb',radius=.002,edges=4))
                         #fourier_com_rad_sd_pos_graph.append(psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]+fourier_com_rad_sd[freq]),color=(1,0,0),colorSpace='rgb',radius=.001,edges=4))
                         #fourier_com_rad_sd_neg_graph.append(psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]-fourier_com_rad_sd[freq]),color=(1,0,0),colorSpace='rgb',radius=.001,edges=4))
-                    else:
+                    elif trial_analysis_visual==1:
                         fourier_com_dot.append(psychopy.visual.Circle(win=win,pos=(fourier_com_x[freq]*fourier_magnifier,fourier_com_y[freq]*fourier_magnifier),color=(0,freq/len(fourier_freqs),0),colorSpace='rgb',radius=.002,edges=4))
                         fourier_com_rad_graph.append(psychopy.visual.Circle(win=win,pos=(-.1*fourier_magnifier*.1+freq*fourier_freq_res*.01*fourier_magnifier*.1,fourier_com_rad[freq]*fourier_magnifier),color=(1,1,1),colorSpace='rgb',radius=.001,edges=4))
                         #fourier_com_rad_sd_pos_graph.append(psychopy.visual.Circle(win=win,pos=(.2+freq*.01,fourier_com_rad_mean[freq]+fourier_com_rad_sd[freq]),color=(0,freq/len(fourier_freqs),0),colorSpace='rgb',radius=.001,edges=4))
@@ -454,69 +476,70 @@ for block in range(numblocks):
         core.wait(current_ri_dur-time_analysis_dur)
         #%% By-trial Feedback
         # Heatmap
-        if debug==1:
-            text_heatmap=psychopy.visual.TextStim(win=win,
-                name='text',text='trial accuracy t-collapsed heatmap',pos=(.7,.40),
-                color='white',height=.015)
-            text_heatmap_mean=psychopy.visual.TextStim(win=win,
-                name='text',text='white:accuracy, green:mean accuracy',pos=(.7,.45),
-                color='white',height=.015)
-            text_fb=psychopy.visual.TextStim(win=win,
-                    name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(.7,.35),
+        if trial_analysis==1 and trial_analysis_visual==1:
+            if debug==1:
+                text_heatmap=psychopy.visual.TextStim(win=win,
+                    name='text',text='trial accuracy t-collapsed heatmap',pos=(.7,.40),
                     color='white',height=.015)
-            #draw heatmap
-            text_fb.draw()
-            text_heatmap.draw()
-            text_heatmap_mean.draw()
-        fixation.draw()
-        for current_pix in range(len(heatmap)):
-            heatmap[current_pix].draw()
-        heatmap_mean.draw()
-        # then flip your window
-        win.flip()
-        core.wait(current_fb_dur/2)
-        if debug==1:
-            # Fourier transform
-            text_fourier=psychopy.visual.TextStim(win=win,
-                name='text',text='trial accuracy fourier transform',pos=(.7,.45),
-                color='white',height=.015)
-            text_fourier_desc=psychopy.visual.TextStim(win=win,
-                name='text',text='cyan:4hz blue:com, pink:8hz red:com, white:other hz green:com',pos=(.7,.4),
-                color='white',height=.015)
-            #draw Fourier
-            text_fourier.draw()
-            text_fourier_desc.draw()
-        fixation.draw()
-        for current_freq in range(len(fourier_graph_freq)):
-            for current_pix in range(len(fourier_graph)):
-                fourier_graph_freq[current_freq][current_pix].draw()
-                fourier_graph_freq[freq==4.0][current_pix].draw()
-                fourier_graph_freq[freq==8.0][current_pix].draw()
-            fourier_com_dot[current_freq].draw()
-        fourier_com_dot[freq==4.0].draw()
-        fourier_com_dot[freq==8.0].draw()
-        # then flip your window
-        win.flip()
-        core.wait(current_fb_dur*1.5)
-        if debug==1:
-            # Fourier com graph
-            text_fourier_com=psychopy.visual.TextStim(win=win,
-                name='text',text='fourier: center of mass amplitude by frequency',pos=(.7,.45),
-                color='white',height=.015)
-            text_fourier_com_desc=psychopy.visual.TextStim(win=win,
-                name='text',text='blue:4hz com, red:8hz com, green:other hz com',pos=(.7,.4),
-                color='white',height=.015)
-            # draw fourier com graphs
-            text_fourier_com.draw()
-            text_fourier_com_desc.draw()
-        fixation.draw()
-        for current_freq in range(len(fourier_graph_freq)):
-            fourier_com_rad_graph[current_freq].draw()
-        fourier_com_rad_graph[freq==4.0].draw()
-        fourier_com_rad_graph[freq==8.0].draw()
-        # then flip your window
-        win.flip()
-        core.wait(current_fb_dur*1.5)
+                text_heatmap_mean=psychopy.visual.TextStim(win=win,
+                    name='text',text='white:accuracy, green:mean accuracy',pos=(.7,.45),
+                    color='white',height=.015)
+                text_fb=psychopy.visual.TextStim(win=win,
+                        name='text',text=str(round(np.mean(acc_rad),2)*100),pos=(.7,.35),
+                        color='white',height=.015)
+                #draw heatmap
+                text_fb.draw()
+                text_heatmap.draw()
+                text_heatmap_mean.draw()
+            fixation.draw()
+            for current_pix in range(len(heatmap)):
+                heatmap[current_pix].draw()
+            heatmap_mean.draw()
+            # then flip your window
+            win.flip()
+            core.wait(current_fb_dur/2)
+            if debug==1:
+                # Fourier transform
+                text_fourier=psychopy.visual.TextStim(win=win,
+                    name='text',text='trial accuracy fourier transform',pos=(.7,.45),
+                    color='white',height=.015)
+                text_fourier_desc=psychopy.visual.TextStim(win=win,
+                    name='text',text='cyan:4hz blue:com, pink:8hz red:com, white:other hz green:com',pos=(.7,.4),
+                    color='white',height=.015)
+                #draw Fourier
+                text_fourier.draw()
+                text_fourier_desc.draw()
+            fixation.draw()
+            for current_freq in range(len(fourier_graph_freq)):
+                for current_pix in range(len(fourier_graph)):
+                    fourier_graph_freq[current_freq][current_pix].draw()
+                    fourier_graph_freq[freq==4.0][current_pix].draw()
+                    fourier_graph_freq[freq==8.0][current_pix].draw()
+                fourier_com_dot[current_freq].draw()
+            fourier_com_dot[freq==4.0].draw()
+            fourier_com_dot[freq==8.0].draw()
+            # then flip your window
+            win.flip()
+            core.wait(current_fb_dur*1.5)
+            if debug==1:
+                # Fourier com graph
+                text_fourier_com=psychopy.visual.TextStim(win=win,
+                    name='text',text='fourier: center of mass amplitude by frequency',pos=(.7,.45),
+                    color='white',height=.015)
+                text_fourier_com_desc=psychopy.visual.TextStim(win=win,
+                    name='text',text='blue:4hz com, red:8hz com, green:other hz com',pos=(.7,.4),
+                    color='white',height=.015)
+                # draw fourier com graphs
+                text_fourier_com.draw()
+                text_fourier_com_desc.draw()
+            fixation.draw()
+            for current_freq in range(len(fourier_graph_freq)):
+                fourier_com_rad_graph[current_freq].draw()
+            fourier_com_rad_graph[freq==4.0].draw()
+            fourier_com_rad_graph[freq==8.0].draw()
+            # then flip your window
+            win.flip()
+            core.wait(current_fb_dur*1.5)
         #%% Playback (For debugging)
         ## Performance View
         if playback==1:
@@ -574,21 +597,22 @@ for block in range(numblocks):
             #raw positions
             d_stim_pos=[stim_pos]
             d_mouse_pos=[mouse_pos]
-            #heatmap
-            d_acc_x=[current_acc_x]
-            d_acc_y=[current_acc_y]
-            d_acc_rad=[acc_rad]
-            #fourier
-            d_fourier_acc_rad_x=[fourier_acc_rad_x]
-            d_fourier_acc_rad_y=[fourier_acc_rad_y]
-            d_fourier_com_x=[fourier_com_x]
-            d_fourier_com_y=[fourier_com_y]
-            d_fourier_com_rad=[fourier_com_rad]
-            #trial statistics
-            d_acc_rad_mean=[acc_rad_mean]
-            d_acc_rad_sd=[acc_rad_sd]
-            d_fourier_com_rad_mean=[fourier_com_rad_mean]
-            d_fourier_com_rad_sd=[fourier_com_rad_sd]
+            if trial_analysis==1:
+                #heatmap
+                d_acc_x=[current_acc_x]
+                d_acc_y=[current_acc_y]
+                d_acc_rad=[acc_rad]
+                #fourier
+                d_fourier_acc_rad_x=[fourier_acc_rad_x]
+                d_fourier_acc_rad_y=[fourier_acc_rad_y]
+                d_fourier_com_x=[fourier_com_x]
+                d_fourier_com_y=[fourier_com_y]
+                d_fourier_com_rad=[fourier_com_rad]
+                #trial statistics
+                d_acc_rad_mean=[acc_rad_mean]
+                d_acc_rad_sd=[acc_rad_sd]
+                d_fourier_com_rad_mean=[fourier_com_rad_mean]
+                d_fourier_com_rad_sd=[fourier_com_rad_sd]
         else:
             #trial data
             d_block.append(block)
@@ -606,29 +630,32 @@ for block in range(numblocks):
             #raw positions
             d_stim_pos.append(stim_pos)
             d_mouse_pos.append(mouse_pos)
-            #heatmap
-            d_acc_x.append(current_acc_x)
-            d_acc_y.append(current_acc_y)
-            d_acc_rad.append(acc_rad)
-            #fourier
-            d_fourier_acc_rad_x.append(fourier_acc_rad_x)
-            d_fourier_acc_rad_y.append(fourier_acc_rad_y)
-            d_fourier_com_x.append(fourier_com_x)
-            d_fourier_com_y.append(fourier_com_y)
-            d_fourier_com_rad.append(fourier_com_rad)
-            #trial statistics
-            d_acc_rad_mean.append(acc_rad_mean)
-            d_acc_rad_sd.append(acc_rad_sd)
-            d_fourier_com_rad_mean.append(fourier_com_rad_mean)
-            d_fourier_com_rad_sd.append(fourier_com_rad_sd)
+            if trial_analysis==1:
+                #heatmap
+                d_acc_x.append(current_acc_x)
+                d_acc_y.append(current_acc_y)
+                d_acc_rad.append(acc_rad)
+                #fourier
+                d_fourier_acc_rad_x.append(fourier_acc_rad_x)
+                d_fourier_acc_rad_y.append(fourier_acc_rad_y)
+                d_fourier_com_x.append(fourier_com_x)
+                d_fourier_com_y.append(fourier_com_y)
+                d_fourier_com_rad.append(fourier_com_rad)
+                #trial statistics
+                d_acc_rad_mean.append(acc_rad_mean)
+                d_acc_rad_sd.append(acc_rad_sd)
+                d_fourier_com_rad_mean.append(fourier_com_rad_mean)
+                d_fourier_com_rad_sd.append(fourier_com_rad_sd)
         #%% By-Trial Prediction! Predict accuracy and fouriers.
-        if trial_prediction==1:
+        if trial_analysis & trial_prediction==1:
             time_prediction_start=trialClock.getTime()
             if trial==0:
                 p_acc_rad_mean=d_acc_rad_mean[trial]
                 p_acc_rad_sd=d_acc_rad_sd[trial]
                 p_fourier_com_rad_mean=np.zeros(len(fourier_com_rad_mean))
                 p_fourier_com_rad_sd=np.zeros(len(fourier_com_rad_sd))
+                pre_fourier_com_rad_mean=[0]
+                pre_fourier_com_rad_sd=[0]
                 for current_freq in range(len(d_fourier_com_rad_mean[trial])):
                     p_fourier_com_rad_mean[current_freq]=d_fourier_com_rad_mean[trial][current_freq]
                     p_fourier_com_rad_sd[current_freq]=d_fourier_com_rad_sd[trial][current_freq]
@@ -636,8 +663,11 @@ for block in range(numblocks):
                 p_acc_rad_mean=sum(d_acc_rad_mean)/(trial+1)
                 p_acc_rad_sd=sum(d_acc_rad_sd)/(trial+1)
                 for current_freq in range(len(d_fourier_com_rad_mean[trial])):
-                    p_fourier_com_rad_mean[current_freq]=sum(d_fourier_com_rad_mean[current_freq])/(trial+1)
-                    p_fourier_com_rad_sd[current_freq]=sum(d_fourier_com_rad_sd[current_freq])/(trial+1)
+                    for current_trial in range(trial):
+                        pre_fourier_com_rad_mean[current_freq].append(d_fourier_com_rad_mean[current_trial][current_freq])
+                        pre_fourier_com_rad_sd[current_freq].append(d_fourier_com_rad_sd[current_trial][current_freq])
+                    p_fourier_com_rad_mean[current_freq]=sum(pre_fourier_com_rad_mean[current_freq])/(trial+1)
+                    p_fourier_com_rad_sd[current_freq]=sum(pre_fourier_com_rad_sd[current_freq])/(trial+1)
             time_prediction_end=trialClock.getTime()-time_prediction_start
         #%% Save data!
             if trial==0 and block==0:
