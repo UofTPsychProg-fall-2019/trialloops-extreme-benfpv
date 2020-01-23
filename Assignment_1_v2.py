@@ -64,9 +64,9 @@ playback=0 #playback the trial after trial_analysis.
 full_analysis=0; #for later, when we analyze the entire experiment!
 
 # fourier resolution
-fourier_min_freq=2 #minimum frequency we should fourier (minimum is == fourier_freq_res).
-fourier_max_freq=10 #maximum frequency we should fourier.
-fourier_freq_res=.2 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
+fourier_min_freq=.2 #minimum frequency we should fourier (minimum is == fourier_freq_res).
+fourier_max_freq=12 #maximum frequency we should fourier.
+fourier_freq_res=.1 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
 
 # open a white full screen window
 screen_x=5120
@@ -350,7 +350,7 @@ for block in range(numblocks):
             heatmap_mean=psychopy.visual.Circle(win=win,pos=(np.mean(current_acc_x),np.mean(current_acc_y)),color=(0,1,0),colorSpace='rgb',radius=.002,edges=4)
             #%% Fourier transform of mouse-stim accuracy throughout trial.
             fourier_freqs=np.arange(fourier_min_freq,fourier_max_freq,fourier_freq_res) #frequency in seconds of one complete fourier cycle.
-            fourier_magnifier=30
+            fourier_magnifier=40
             for freq in range(len(fourier_freqs)):
                 if freq==0:
                     fourier_fpf=[trial_fps*fourier_freqs[freq]] #frames per fourier_freq
@@ -468,10 +468,10 @@ for block in range(numblocks):
             text_fb.draw()
             text_heatmap.draw()
             text_heatmap_mean.draw()
+        fixation.draw()
         for current_pix in range(len(heatmap)):
             heatmap[current_pix].draw()
         heatmap_mean.draw()
-        fixation.draw()
         # then flip your window
         win.flip()
         core.wait(current_fb_dur/2)
@@ -486,6 +486,7 @@ for block in range(numblocks):
             #draw Fourier
             text_fourier.draw()
             text_fourier_desc.draw()
+        fixation.draw()
         for current_freq in range(len(fourier_graph_freq)):
             for current_pix in range(len(fourier_graph)):
                 fourier_graph_freq[current_freq][current_pix].draw()
@@ -494,7 +495,6 @@ for block in range(numblocks):
             fourier_com_dot[current_freq].draw()
         fourier_com_dot[freq==4.0].draw()
         fourier_com_dot[freq==8.0].draw()
-        fixation.draw()
         # then flip your window
         win.flip()
         core.wait(current_fb_dur*1.5)
@@ -509,11 +509,11 @@ for block in range(numblocks):
             # draw fourier com graphs
             text_fourier_com.draw()
             text_fourier_com_desc.draw()
+        fixation.draw()
         for current_freq in range(len(fourier_graph_freq)):
             fourier_com_rad_graph[current_freq].draw()
         fourier_com_rad_graph[freq==4.0].draw()
         fourier_com_rad_graph[freq==8.0].draw()
-        fixation.draw()
         # then flip your window
         win.flip()
         core.wait(current_fb_dur*1.5)
