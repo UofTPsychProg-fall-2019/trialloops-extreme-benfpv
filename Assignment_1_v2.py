@@ -163,6 +163,11 @@ for block in range(numblocks):
         current_ri_dur=1
         # vwm reset conditions
         start_reset=random.randint(0,1)
+        start_reset_time=random.randint(2000,(current_track_dur*1000)-2000)/1000
+        reset_done=0
+        #colors
+        start_color=(1,1,1)
+        reset_color=(1,1,0)
         # mouse tracking per trial
         mouse.clickReset()
         stim_pos=[[0.0,0.0]]
@@ -255,12 +260,6 @@ for block in range(numblocks):
                 c1_deg_data.append(np.arcsin((stim_pos[frame_track][1]-stim_pos[frame_track-1][1])/(stim_pos[frame_track][0]-stim_pos[frame_track-1][0])))
                 if frame_track==1:
                     time_track_start=time_track
-                    # track initiation accel/reset condition
-                    if start_reset==1:
-                        c1_xpos=(random.randint(0,1000)/1000)*(poslmt-startpos_buf)
-                        c1_ypos=(random.randint(0,1000)/1000)*(poslmt-startpos_buf)
-                        c1_xacc=0*acc_multiplier
-                        c1_yacc=0*acc_multiplier
                 # end trial if >current_track_dur
                 if time_track>=current_track_dur:
                     frame_track_end=frame_track
@@ -289,9 +288,21 @@ for block in range(numblocks):
                     text_time=psychopy.visual.TextStim(win=win,
                         name='text',text='time'+str(time_track-time_track_start),pos=(.5,.40),
                         color='white',height=.015)
-                # moving stims
-                tgtcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='white',radius=c1_rad,edges=14)
-                mousecircle=psychopy.visual.Circle(win=win,pos=(mouse.getPos()[0],mouse.getPos()[1]),color='grey',radius=c1_rad/3,edges=14)
+                # accel/reset condition
+                if reset_done==0 and start_reset==1 and current_track_dur>=start_reset_time:
+                    #c1_xacc=0*acc_multiplier
+                    #c1_yacc=0*acc_multiplier
+                    reset_time=trialClock.getTime()
+                    reset_done=1
+                # fps & trial details text
+                if reset_done==0:
+                    # moving stims
+                    tgtcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color=start_color,colorSpace='rgb',radius=c1_rad,edges=14)
+                    mousecircle=psychopy.visual.Circle(win=win,pos=(mouse.getPos()[0],mouse.getPos()[1]),color=(.8,.8,.8),colorSpace='rgb',radius=c1_rad/3,edges=14)
+                elif reset_done==1:
+                    # moving stims
+                    tgtcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color=reset_color,colorSpace='rgb',radius=c1_rad,edges=14)
+                    mousecircle=psychopy.visual.Circle(win=win,pos=(mouse.getPos()[0],mouse.getPos()[1]),color=(.8,.8,.8),colorSpace='rgb',radius=c1_rad/3,edges=14)
                 # fps & trial details text
                 current_fps.append(round(frame_track/time_track,2))
                 if debug_fps==1:
@@ -528,7 +539,7 @@ for block in range(numblocks):
                     name='text',text='fourier: center of mass amplitude by frequency',pos=(.7,.45),
                     color='white',height=.015)
                 text_fourier_com_desc=psychopy.visual.TextStim(win=win,
-                    name='text',text='blue:4hz com, red:8hz com, green:other hz com',pos=(.7,.4),
+                    name='text',text='blue:4hz com, red:8hz com, white:other hz com',pos=(.7,.4),
                     color='white',height=.015)
                 # draw fourier com graphs
                 text_fourier_com.draw()
@@ -695,7 +706,7 @@ for block in range(numblocks):
                     name='text',text='fourier: center of mass amplitude by frequency',pos=(.7,.45),
                     color='white',height=.015)
                 text_fourier_com_desc=psychopy.visual.TextStim(win=win,
-                    name='text',text='blue:4hz com, red:8hz com, green:other hz com',pos=(.7,.4),
+                    name='text',text='blue:4hz com, red:8hz com, white:other hz com',pos=(.7,.4),
                     color='white',height=.015)
                 # draw fourier com graphs
                 text_fourier_com.draw()
