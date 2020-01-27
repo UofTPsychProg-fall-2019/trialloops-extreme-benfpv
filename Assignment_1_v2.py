@@ -597,6 +597,11 @@ for block in range(numblocks):
             #raw positions
             d_stim_pos=[stim_pos]
             d_mouse_pos=[mouse_pos]
+            #raw acceleration and degrees data
+            d_c1_xacc_data=[c1_xacc_data]
+            d_c1_yacc_data=[c1_yacc_data]
+            d_c1_racc_data=[c1_racc_data]
+            d_c1_deg_data=[c1_deg_data]
             if trial_analysis==1:
                 #heatmap
                 d_acc_x=[current_acc_x]
@@ -630,6 +635,11 @@ for block in range(numblocks):
             #raw positions
             d_stim_pos.append(stim_pos)
             d_mouse_pos.append(mouse_pos)
+            #raw acceleration and degrees data
+            d_c1_xacc_data.append(c1_xacc_data)
+            d_c1_yacc_data.append(c1_yacc_data)
+            d_c1_racc_data.append(c1_racc_data)
+            d_c1_deg_data.append(c1_deg_data)
             if trial_analysis==1:
                 #heatmap
                 d_acc_x.append(current_acc_x)
@@ -652,22 +662,23 @@ for block in range(numblocks):
             if trial==0:
                 p_acc_rad_mean=d_acc_rad_mean[trial]
                 p_acc_rad_sd=d_acc_rad_sd[trial]
-                p_fourier_com_rad_mean=np.zeros(len(fourier_com_rad_mean))
-                p_fourier_com_rad_sd=np.zeros(len(fourier_com_rad_sd))
-                pre_fourier_com_rad_mean=[0]
-                pre_fourier_com_rad_sd=[0]
-                for current_freq in range(len(d_fourier_com_rad_mean[trial])):
-                    p_fourier_com_rad_mean[current_freq]=d_fourier_com_rad_mean[trial][current_freq]
-                    p_fourier_com_rad_sd[current_freq]=d_fourier_com_rad_sd[trial][current_freq]
+                p_fourier_com_rad_mean=np.zeros(len(fourier_freqs))
+                p_fourier_com_rad_sd=np.zeros(len(fourier_freqs))
+                pre_fourier_com_rad_mean=np.zeros(len(fourier_freqs))
+                pre_fourier_com_rad_sd=np.zeros(len(fourier_freqs))
+                for current_freq in range(len(fourier_freqs)):
+                    pre_fourier_com_rad_mean[current_freq]=d_fourier_com_rad_mean[0][current_freq]
+                    pre_fourier_com_rad_sd[current_freq]=d_fourier_com_rad_sd[0][current_freq]
             else:
                 p_acc_rad_mean=sum(d_acc_rad_mean)/(trial+1)
                 p_acc_rad_sd=sum(d_acc_rad_sd)/(trial+1)
-                for current_freq in range(len(d_fourier_com_rad_mean[trial])):
-                    for current_trial in range(trial):
-                        pre_fourier_com_rad_mean[current_freq].append(d_fourier_com_rad_mean[current_trial][current_freq])
-                        pre_fourier_com_rad_sd[current_freq].append(d_fourier_com_rad_sd[current_trial][current_freq])
-                    p_fourier_com_rad_mean[current_freq]=sum(pre_fourier_com_rad_mean[current_freq])/(trial+1)
-                    p_fourier_com_rad_sd[current_freq]=sum(pre_fourier_com_rad_sd[current_freq])/(trial+1)
+                for current_trial in range(trial):
+                    for current_freq in range(len(fourier_freqs)):
+                        pre_fourier_com_rad_mean[current_freq]=pre_fourier_com_rad_mean[current_freq]+d_fourier_com_rad_mean[current_trial][current_freq]
+                        pre_fourier_com_rad_sd[current_freq]=pre_fourier_com_rad_sd[current_freq]+d_fourier_com_rad_sd[current_trial][current_freq]
+                for current_freq in range(len(fourier_freqs)):
+                    p_fourier_com_rad_mean[current_freq]=pre_fourier_com_rad_mean[current_freq]/(trial+1)
+                    p_fourier_com_rad_sd[current_freq]=pre_fourier_com_rad_sd[current_freq]/(trial+1)
             time_prediction_end=trialClock.getTime()-time_prediction_start
         #%% Save data!
             if trial==0 and block==0:
