@@ -57,11 +57,11 @@ fullscreen=0 #fullscreen win or not?
 debug=1 #Debug mode on (1) or off (0).
 debug_fps=0 #shows fps data
 trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
-trial_analysis_visual=0 # If trial_analysis is 1, and if you want to visualize trial_analysis.
+trial_analysis_visual=1 # If trial_analysis is 1, and if you want to visualize trial_analysis.
 trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
 trial_prediction_visual=1 # see the trial prediction graphs.
-frame_prediction=1 #Accuracy prediction frame-by-frame per trial.
-frame_prediction_visual=1 #if frame_prediction is 1, and you want to visualize frame_prediction.
+frame_prediction=0 #Accuracy prediction frame-by-frame per trial.
+frame_prediction_visual=0 #if frame_prediction is 1, and you want to visualize frame_prediction.
 playback=0 #playback the trial after trial_analysis.
 full_analysis=0 #for later, when we analyze the entire experiment!
 trail_visual=1 #calculate and see the trail (acceleraion amount per frame)
@@ -69,7 +69,7 @@ trail_visual=1 #calculate and see the trail (acceleraion amount per frame)
 # fourier resolution
 fourier_min_freq=1 #minimum frequency we should fourier (minimum is == fourier_freq_res).
 fourier_max_freq=12 #maximum frequency we should fourier.
-fourier_freq_res=.5 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
+fourier_freq_res=1 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
 
 # open a white full screen window
 screen_x=1920  #5120 iMac
@@ -116,11 +116,13 @@ if debug==1:
 else:
     mouse=event.Mouse(visible=False,win=win)
 #track parameters
-track_rad=.3
-track_thickness=.005 #must be synonymous with c1_rad
+track_rad=.2
+track_thickness=.01 #must be synonymous with c1_rad
 track_color=(.3,.3,.3)
-track_outer=psychopy.visual.Circle(win=win,pos=(0,0),color=track_color,colorSpace='rgb',radius=track_rad+track_thickness,edges=20)
-track_inner=psychopy.visual.Circle(win=win,pos=(0,0),color=background_color,radius=track_rad-track_thickness,edges=20)
+track_line_rad=track_rad*1.5
+#track
+track_outer=psychopy.visual.Circle(win=win,pos=(0,0),color=track_color,colorSpace='rgb',radius=track_rad+track_thickness,edges=60)
+track_inner=psychopy.visual.Circle(win=win,pos=(0,0),color=background_color,radius=track_rad-track_thickness,edges=60)
 #object parameters
 c1_rad=.01 #must be synonymous with track_thickness
 #physical limits
@@ -151,21 +153,33 @@ for block in range(numblocks):
         frame_track=0
         # start stimulus physics
         c1_angle=(random.randint(0,36000)/100)
-        c1_xpos=np.cos(c1_angle*track_rad)
-        c1_ypos=np.sin(c1_angle*track_rad)
-        c1_xacc=0*acc_multiplier
-        c1_yacc=0*acc_multiplier
-        # stimulus acceleration data
-        c1_xacc_data=[0]
-        c1_yacc_data=[0]
-        c1_racc_data=[0]
+        c1_xpos=np.cos(c1_angle*track_rad)*track_rad
+        c1_ypos=np.sin(c1_angle*track_rad)*track_rad
+        c1_arcvel=random.randint(100,500)/1000
+        c1_cw=random.randint(1,2)
+        if c1_cw==1:
+            c1_arcvel=c1_arcvel
+        elif c1_cw==2:
+            c1_arcvel=-c1_arcvel
+        #track
+        track_angle=c1_angle
+        track_line_xpos=np.cos(track_angle*track_line_rad)*track_line_rad
+        track_line_ypos=np.sin(track_angle*track_line_rad)*track_line_rad
+        track_line=psychopy.visual.Line(win=win,start=(-track_line_xpos,-track_line_ypos),end=(track_line_xpos,track_line_ypos))
+        if track_angle<=180:
+            track_occluder_ontop=psychopy.visual.ShapeStim(win=win,fillColor=background_color,vertices=((track_line_xpos*3,track_line_ypos*3),(-track_line_xpos*3,-track_line_ypos*3),(2,0)))
+        elif track_angle>180:
+            track_occluder_ontop=psychopy.visual.ShapeStim(win=win,fillColor=background_color,vertices=((track_line_xpos*3,track_line_ypos*3),(-track_line_xpos*3,-track_line_ypos*3),(2,0)))
+        track_outer_ontop=psychopy.visual.Circle(win=win,pos=(0,0),color=track_color,colorSpace='rgb',radius=track_rad+track_thickness,edges=60)
+        # stimulus data
+        c1_angle_data=[0]
         c1_deg_data=[0]
         # trail/fps data
         trail=[0]
         current_fps=[0.0]
         # durations/timing/randomized times
         current_cue_dur=random.randint(500,1500)/1000
-        current_track_dur=random.randint(5000,15000)/1000 #5000-15000 is ok
+        current_track_dur=random.randint(10000,16000)/1000 #5000-15000 is ok
         current_ri_dur=1
         # vwm reset conditions
         start_reset=random.randint(0,1)
@@ -173,7 +187,7 @@ for block in range(numblocks):
         reset_done=0
         #colors
         start_color=(1,1,1)
-        reset_color=(1,1,0)
+        reset_color=(1,1,1)
         # mouse tracking per trial
         mouse.clickReset()
         stim_pos=[[0.0,0.0]]
@@ -212,8 +226,10 @@ for block in range(numblocks):
                             color='white',height=.015)
             # then draw all stimuli
             track_outer.draw()
-            track_inner.draw()
             tgtcircle.draw()
+            track_occluder_ontop.draw()
+            track_inner.draw()
+            track_line.draw()
             mousecircle.draw()
             text.draw()
             fixation.draw()
@@ -233,38 +249,15 @@ for block in range(numblocks):
                 # accuracy calculations
                 current_acc_x.append(mouse_pos[frame_track][0]-stim_pos[frame_track][0])
                 current_acc_y.append(mouse_pos[frame_track][1]-stim_pos[frame_track][1])
-                # modulate acceleration towards center by distance from center
-                c1_xacc=c1_xacc+(random.randint(-acclmt,acclmt)*acc_multiplier)+(-c1_xpos*opp_acc_multiplier)
-                c1_yacc=c1_yacc+(random.randint(-acclmt,acclmt)*acc_multiplier)+(-c1_ypos*opp_acc_multiplier)
-                # speedlimit
-                if c1_xacc>spdlmt:
-                    c1_xacc=spdlmt
-                elif c1_xacc<-spdlmt:
-                    c1_xacc=-spdlmt
-                if c1_yacc>spdlmt:
-                    c1_yacc=spdlmt
-                elif c1_yacc<-spdlmt:
-                    c1_yacc=-spdlmt
-                c1_xpos=c1_xpos+c1_xacc
-                c1_ypos=c1_ypos+c1_yacc
-                # poslimit
-                if c1_xpos>poslmt:
-                    c1_xpos=poslmt
-                    c1_xacc=-c1_xacc*fric
-                elif c1_xpos<-poslmt:
-                    c1_xpos=-poslmt
-                    c1_xacc=-c1_xacc*fric
-                if c1_ypos>poslmt:
-                    c1_ypos=poslmt
-                    c1_yacc=-c1_yacc*fric
-                elif c1_ypos<-poslmt:
-                    c1_ypos=-poslmt
-                    c1_yacc=-c1_yacc*fric
-                # stimulus acceleration data
-                c1_xacc_data.append(c1_xacc)
-                c1_yacc_data.append(c1_yacc)
-                c1_racc_data.append(np.sqrt(c1_xacc_data[frame_track]**2+c1_yacc_data[frame_track]**2))
+                # stimulus position
+                c1_angle=c1_angle+c1_arcvel
+                c1_angle=c1_angle%360
+                if c1_angle==0:
+                    c1_angle=360
+                c1_xpos=np.cos(c1_angle*track_rad)*track_rad
+                c1_ypos=np.sin(c1_angle*track_rad)*track_rad
                 # stimulus direction data
+                c1_angle_data.append(c1_angle)
                 c1_deg_data.append(np.arcsin((stim_pos[frame_track][1]-stim_pos[frame_track-1][1])/(stim_pos[frame_track][0]-stim_pos[frame_track-1][0])))
                 if frame_track==1:
                     time_track_start=time_track
@@ -281,9 +274,9 @@ for block in range(numblocks):
                         color='white',height=.015)
                 # draw the trail
                 if trail_visual==1:
-                    trail.append(psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color=[.1+round(c1_racc_data[frame_track]*100,1),0,0],colorSpace='rgb',radius=c1_rad/5,edges=3))
+                    trail.append(psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='red',radius=c1_rad/5,edges=3))
                     for current_frame in range(frame_track):
-                        if current_frame%3 == 0:
+                        if current_frame%3==0:
                             trail[current_frame+1].draw()
                 # position text
                 if debug==1:
@@ -298,8 +291,6 @@ for block in range(numblocks):
                         color='white',height=.015)
                 # accel/reset condition
                 if reset_done==0 and start_reset==1 and current_track_dur>=start_reset_time:
-                    #c1_xacc=0*acc_multiplier
-                    #c1_yacc=0*acc_multiplier
                     reset_time=trialClock.getTime()
                     reset_done=1
                 # fps & trial details text
@@ -345,7 +336,6 @@ for block in range(numblocks):
                         p_acc_rad_sd.append(np.mean(acc_rad_sd[1::]))
                         if frame_prediction_visual==1:
                             predictcircle=psychopy.visual.Circle(win=win,pos=(c1_xpos,c1_ypos),color='blue',radius=p_acc_rad_mean[frame_track],edges=14)
-                            stim_dir=psychopy.visual.Circle(win=win,pos=(c1_xpos+c1_xacc,c1_ypos+c1_yacc),color='white',radius=c1_rad/3,edges=3)
                 if debug==1:
                     text.draw()
                     text_stim_pos.draw()
@@ -358,8 +348,10 @@ for block in range(numblocks):
                 if frame_prediction==1 and frame_prediction_visual==1 and frame_track>1:
                     predictcircle.draw()
                 track_outer.draw()
-                track_inner.draw()
                 tgtcircle.draw()
+                track_occluder_ontop.draw()
+                track_inner.draw()
+                track_line.draw()
                 mousecircle.draw()
                 fixation.draw()
                 # then flip your window
@@ -493,7 +485,10 @@ for block in range(numblocks):
             text_frame.draw()
             text_time.draw()
         track_outer.draw()
+        tgtcircle.draw()
+        track_occluder_ontop.draw()
         track_inner.draw()
+        track_line.draw()
         fixation.draw()
         # then flip your window
         win.flip()
@@ -593,10 +588,12 @@ for block in range(numblocks):
                         color='white',height=.015)
                     # then draw all stimuli
                     track_outer.draw()
-                    track_inner.draw()
-                    text.draw()
                     tgtcircle_2.draw()
+                    track_occluder_ontop.draw()
+                    track_inner.draw()
+                    track_line.draw()
                     mousecircle_2.draw()
+                    text.draw()
                     text_frame.draw()
                     text_stim_pos.draw()
                     text_mouse_pos.draw()
@@ -624,9 +621,7 @@ for block in range(numblocks):
             d_stim_pos=[stim_pos]
             d_mouse_pos=[mouse_pos]
             #raw acceleration and degrees data
-            d_c1_xacc_data=[c1_xacc_data]
-            d_c1_yacc_data=[c1_yacc_data]
-            d_c1_racc_data=[c1_racc_data]
+            d_c1_angle_data=[c1_angle_data]
             d_c1_deg_data=[c1_deg_data]
             if trial_analysis==1:
                 #heatmap
@@ -662,9 +657,7 @@ for block in range(numblocks):
             d_stim_pos.append(stim_pos)
             d_mouse_pos.append(mouse_pos)
             #raw acceleration and degrees data
-            d_c1_xacc_data.append(c1_xacc_data)
-            d_c1_yacc_data.append(c1_yacc_data)
-            d_c1_racc_data.append(c1_racc_data)
+            d_c1_angle_data.append(c1_angle_data)
             d_c1_deg_data.append(c1_deg_data)
             if trial_analysis==1:
                 #heatmap
