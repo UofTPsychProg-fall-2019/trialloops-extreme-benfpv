@@ -67,9 +67,9 @@ full_analysis=0 #for later, when we analyze the entire experiment!
 trail_visual=1 #calculate and see the trail (acceleraion amount per frame)
 
 # fourier resolution
-fourier_min_freq=1 #minimum frequency we should fourier (minimum is == fourier_freq_res).
-fourier_max_freq=12 #maximum frequency we should fourier.
-fourier_freq_res=1 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
+fourier_min_freq=3 #minimum frequency we should fourier (minimum is == fourier_freq_res).
+fourier_max_freq=9 #maximum frequency we should fourier.
+fourier_freq_res=.1 #resolution of fourier transform; min to max in this interval. Must be divisible by 1.
 
 # open a white full screen window
 screen_x=1920  #5120 iMac
