@@ -52,19 +52,20 @@ import random
 ###########################
 #### B. Quick Settings ####
 ###########################
+subnum=1 #subject number
 # Note: Position is always defined as maximum of .5, and in coordinate plane.
 fullscreen=0 #fullscreen win or not?
 debug=1 #Debug mode on (1) or off (0).
 debug_fps=0 #shows fps data
-trial_analysis=1 #Trial-by-trial analysis, used for model-prediction.
+trial_analysis=0 #Trial-by-trial analysis, used for model-prediction.
 trial_analysis_visual=0 # If trial_analysis is 1, and if you want to visualize trial_analysis.
-trial_prediction=1 #Within-trial prediction of accuracy (acc_rad).
-trial_prediction_visual=1 # see the trial prediction graphs.
-frame_prediction=1 #Accuracy prediction frame-by-frame per trial.
-frame_prediction_visual=1 #if frame_prediction is 1, and you want to visualize frame_prediction.
+trial_prediction=0 #Within-trial prediction of accuracy (acc_rad).
+trial_prediction_visual=0 # see the trial prediction graphs.
+frame_prediction=0 #Accuracy prediction frame-by-frame per trial.
+frame_prediction_visual=0 #if frame_prediction is 1, and you want to visualize frame_prediction.
 playback=0 #playback the trial after trial_analysis.
 full_analysis=0 #for later, when we analyze the entire experiment!
-trail_visual=1 #calculate and see the trail (acceleraion amount per frame)
+trail_visual=0 #calculate and see the trail (acceleraion amount per frame)
 
 # fourier resolution
 fourier_min_freq=1 #minimum frequency we should fourier (minimum is == fourier_freq_res).
@@ -733,6 +734,40 @@ for block in range(numblocks):
             # then flip your window
             win.flip()
             core.wait(current_fb_dur*1.5)
+            
+#%% Save All Data!
+d_block = np.asarray(d_block)
+d_trial = np.asarray(d_trial)
+d_cue_dur = np.asarray(d_cue_dur)
+d_track_dur = np.asarray(d_track_dur)
+d_time_track_dur = np.asarray(d_time_track_dur)
+d_start_reset = np.asarray(d_start_reset)
+d_stim_pos = np.asarray(d_stim_pos)
+d_mouse_pos = np.asarray(d_mouse_pos)
+d_c1_xacc_data = np.asarray(d_c1_xacc_data)
+d_c1_yacc_data = np.asarray(d_c1_yacc_data)
+d_c1_racc_data = np.asarray(d_c1_racc_data)
+d_c1_deg_data = np.asarray(d_c1_deg_data)
+d_acc_x = np.asarray(d_acc_x)
+d_acc_y = np.asarray(d_acc_y)
+d_acc_rad = np.asarray(d_acc_rad)
+
+np.savetxt("d_block.csv", d_block, delimiter=",")
+np.savetxt("d_trial.csv", d_trial, delimiter=",")
+np.savetxt("d_cue_dur.csv", d_cue_dur, delimiter=",")
+np.savetxt("d_track_dur.csv", d_track_dur, delimiter=",")
+np.savetxt("d_time_track_dur.csv", d_time_track_dur, delimiter=",")
+np.savetxt("d_start_reset.csv", d_start_reset, delimiter=",")
+np.savetxt("d_stim_pos.csv", d_stim_pos, delimiter=",")
+np.savetxt("d_mouse_pos.csv", d_mouse_pos, delimiter=",")
+np.savetxt("d_c1_xacc_data.csv", d_c1_xacc_data, delimiter=",")
+np.savetxt("d_c1_yacc_data.csv", d_c1_yacc_data, delimiter=",")
+np.savetxt("d_c1_racc_data.csv", d_c1_racc_data, delimiter=",")
+np.savetxt("d_c1_deg_data.csv", d_c1_deg_data, delimiter=",")
+np.savetxt("d_acc_x.csv", d_acc_x, delimiter=",")
+np.savetxt("d_acc_y.csv", d_acc_y, delimiter=",")
+np.savetxt("d_acc_rad.csv", d_acc_rad, delimiter=",")
+
 #%% Required clean up
 # this cell will make sure that your window displays for a while and then 
 # closes properly
